@@ -10,9 +10,9 @@ const UnlockContext = createContext<UnlockContextType | undefined>(undefined);
 
 export function UnlockProvider({ children }: { children: ReactNode }) {
   const [manualUnlock, setUnlocked] = useState(false);
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
 
-  const isUnlocked = manualUnlock || user?.email === "fedhatevin@gmail.com";
+  const isUnlocked = manualUnlock || user?.email === "fedhatevin@gmail.com" || isAdmin;
 
   return (
     <UnlockContext.Provider value={{ isUnlocked, setUnlocked }}>

@@ -9,52 +9,29 @@ import { Search, MapPin, Clock, DollarSign, ExternalLink, Lock } from "lucide-re
 import { useUnlock } from "../contexts/UnlockContext";
 import { motion } from "motion/react";
 import { Link } from "react-router";
+import { useEffect, useState } from "react";
+import { supabase } from "../../lib/supabase";
+import { Loader2 } from "lucide-react";
 
 export default function AIJobs() {
   const { isUnlocked } = useUnlock();
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const jobs = [
-    {
-      id: 1,
-      company: "Outlier AI",
-      title: "AI Training Specialist",
-      type: "Remote",
-      pay: "$15-$20/hour",
-      location: "Worldwide",
-      requirements: "Bachelor's degree, English proficiency",
-      description: "Train AI models through data annotation and evaluation tasks.",
-    },
-    {
-      id: 2,
-      company: "Scale AI",
-      title: "Data Annotation Expert",
-      type: "Remote",
-      pay: "$18-$25/hour",
-      location: "Global",
-      requirements: "Detail-oriented, computer literacy",
-      description: "Annotate images, text, and videos for AI model training.",
-    },
-    {
-      id: 3,
-      company: "Telus AI",
-      title: "AI Evaluator",
-      type: "Remote",
-      pay: "$12-$18/hour",
-      location: "Multiple regions",
-      requirements: "Attention to detail, reliable internet",
-      description: "Evaluate and rate AI-generated content for quality.",
-    },
-    {
-      id: 4,
-      company: "Appen",
-      title: "AI Trainer",
-      type: "Remote",
-      pay: "$10-$15/hour",
-      location: "Worldwide",
-      requirements: "Native language skills, basic tech knowledge",
-      description: "Complete various AI training tasks and micro-tasks.",
-    },
-  ];
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        const { data, error } = await supabase.from('ai_jobs').select('*').order('id', { ascending: false });
+        if (!error && data) setJobs(data);
+      } catch (err) {
+        console.error("Error fetching AI jobs:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobs();
+  }, []);
 
   if (!isUnlocked) {
     return (
@@ -166,15 +143,24 @@ export default function AIJobs() {
           </div>
 
           {/* Job Listings */}
-          <motion.div 
-            className="grid grid-cols-1 gap-6"
-            initial="hidden"
-            animate="visible"
-            variants={{
-              visible: { transition: { staggerChildren: 0.1 } }
-            }}
-          >
-            {jobs.map((job) => (
+          {loading ? (
+             <div className="flex justify-center py-12">
+               <Loader2 className="w-8 h-8 animate-spin text-primary" />
+             </div>
+          ) : jobs.length === 0 ? (
+             <div className="text-center py-12 text-muted-foreground">
+               No AI jobs found. Add some from the Admin Panel.
+             </div>
+          ) : (
+             <motion.div 
+               className="grid grid-cols-1 gap-6"
+               initial="hidden"
+               animate="visible"
+               variants={{
+                 visible: { transition: { staggerChildren: 0.1 } }
+               }}
+             >
+               {jobs.map((job) => (
               <motion.div 
                 key={job.id}
                 variants={{
@@ -225,10 +211,12 @@ export default function AIJobs() {
                     </div>
 
                     <div className="flex gap-3">
-                      <Button className="bg-primary hover:bg-primary/90">
-                        Apply Now
-                        <ExternalLink className="w-4 h-4 ml-2" />
-                      </Button>
+                      <a href={job.apply_link || "#"} target="_blank" rel="noopener noreferrer" className="block">
+                        <Button className="bg-primary hover:bg-primary/90 w-full">
+                          Apply Now
+                          <ExternalLink className="w-4 h-4 ml-2" />
+                        </Button>
+                      </a>
                       <Button variant="outline">
                         View Guide
                       </Button>
@@ -238,6 +226,7 @@ export default function AIJobs() {
               </motion.div>
             ))}
           </motion.div>
+          )}
 
           {/* CTA Section */}
           <Card className="mt-12 border-2 border-accent/20 bg-accent/5">
@@ -250,12 +239,16 @@ export default function AIJobs() {
                   Unlock our comprehensive guides to increase your chances of getting hired
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button className="bg-primary hover:bg-primary/90">
-                    Low Paying Guides - $2
-                  </Button>
-                  <Button className="bg-secondary hover:bg-secondary/90">
-                    High Paying Guides - $5
-                  </Button>
+                  <Link to="/guides">
+                    <Button className="bg-primary hover:bg-primary/90 w-full sm:w-auto">
+                      Low Paying Guides - $2
+                    </Button>
+                  </Link>
+                  <Link to="/guides">
+                    <Button className="bg-secondary hover:bg-secondary/90 w-full sm:w-auto">
+                      High Paying Guides - $5
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </CardContent>

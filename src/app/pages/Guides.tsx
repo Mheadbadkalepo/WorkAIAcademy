@@ -4,70 +4,52 @@ import { Link } from "react-router";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
-import { Lock, BookOpen, CheckCircle2 } from "lucide-react";
+import { Lock, BookOpen, CheckCircle2, Loader2 } from "lucide-react";
 import { useUnlock } from "../contexts/UnlockContext";
+import { useAuth } from "../contexts/AuthContext";
+import { useEffect, useState } from "react";
+import { supabase } from "../../lib/supabase";
 
 export default function Guides() {
   const { isUnlocked } = useUnlock();
-  const lowPayingGuides = [
-    {
-      id: 1,
-      title: "Appen Complete Guide",
-      description: "Step-by-step guide to getting hired and succeeding at Appen",
-      price: 2,
-      locked: !isUnlocked,
-      lessons: 12,
-      path: "appen"
-    },
-    {
-      id: 2,
-      title: "Remotasks Walkthrough",
-      description: "Master Remotasks with our comprehensive training guide",
-      price: 2,
-      locked: !isUnlocked,
-      lessons: 10,
-      path: "remotasks"
-    },
-    {
-      id: 3,
-      title: "Clickworker Success Guide",
-      description: "Learn how to maximize earnings on Clickworker",
-      price: 2,
-      locked: !isUnlocked,
-      lessons: 8,
-      path: "clickworker"
-    },
-  ];
+  const { user, isAdmin } = useAuth();
+  const [guides, setGuides] = useState<any[]>([]);
+  const [userGuideIds, setUserGuideIds] = useState<number[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const highPayingGuides = [
-    {
-      id: 4,
-      title: "Outlier AI Complete Guide",
-      description: "Everything you need to get hired and excel at Outlier AI",
-      price: 5,
-      locked: !isUnlocked,
-      lessons: 15,
-      path: "outlier"
-    },
-    {
-      id: 5,
-      title: "Telus AI Walkthrough",
-      description: "Comprehensive guide to Telus AI application and success",
-      price: 5,
-      locked: !isUnlocked,
-      lessons: 14,
-      path: "telus"
-    },
-    {
-      id: 6,
-      title: "Scale AI Application Guide",
-      description: "Insider tips for Scale AI applications and tasks",
-      price: 5,
-      locked: !isUnlocked,
-      lessons: 16,
-      path: "scale"
-    },
-  ];
+  useEffect(() => {
+    const fetchGuides = async () => {
+      try {
+        const { data, error } = await supabase.from('guides').select('*').order('id', { ascending: true });
+        if (!error && data) setGuides(data);
+
+        if (user) {
+          const { data: ugData } = await supabase
+            .from('user_guides')
+            .select('guide_id')
+            .eq('user_id', user.id);
+          
+          if (ugData) {
+            setUserGuideIds(ugData.map(ug => ug.guide_id));
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching guides:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchGuides();
+  }, [user]);
+
+  const isGuideLocked = (guideId: number) => {
+    if (isUnlocked || isAdmin) return false;
+    if (userGuideIds.includes(guideId)) return false;
+    return true;
+  };
+
+  const lowPayingGuides = guides.filter(g => g.tier === 'low').map(g => ({ ...g, locked: isGuideLocked(g.id) }));
+  const highPayingGuides = guides.filter(g => g.tier === 'high').map(g => ({ ...g, locked: isGuideLocked(g.id) }));
 
   return (
     <div className="min-h-screen">
@@ -96,6 +78,13 @@ export default function Guides() {
               </a>
             </div>
 
+            {loading ? (
+               <div className="flex justify-center py-12">
+                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
+               </div>
+            ) : lowPayingGuides.length === 0 ? (
+               <div className="text-center py-8 text-muted-foreground">No low paying guides found. Add some from the Admin Panel.</div>
+            ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {lowPayingGuides.map((guide) => (
                 <Card key={guide.id} className="border-2 relative overflow-hidden">
@@ -139,6 +128,7 @@ export default function Guides() {
                 </Card>
               ))}
             </div>
+            )}
           </div>
 
           {/* High Paying Guides */}
@@ -155,6 +145,13 @@ export default function Guides() {
               </a>
             </div>
 
+            {loading ? (
+               <div className="flex justify-center py-12">
+                 <Loader2 className="w-8 h-8 animate-spin text-secondary" />
+               </div>
+            ) : highPayingGuides.length === 0 ? (
+               <div className="text-center py-8 text-muted-foreground">No high paying guides found. Add some from the Admin Panel.</div>
+            ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {highPayingGuides.map((guide) => (
                 <Card key={guide.id} className="border-2 relative overflow-hidden">
@@ -183,13 +180,22 @@ export default function Guides() {
                         <span>Lifetime access</span>
                       </div>
                     </div>
-                    <Button variant="outline" className="w-full" disabled={guide.locked}>
-                      {guide.locked ? "Locked" : "Start Learning"}
-                    </Button>
+                    {guide.locked ? (
+                      <Button variant="outline" className="w-full" disabled>
+                        Locked
+                      </Button>
+                    ) : (
+                      <Link to={`/guides/${guide.path}`} className="w-full block">
+                        <Button variant="outline" className="w-full cursor-pointer hover:bg-secondary/10">
+                          Start Learning
+                        </Button>
+                      </Link>
+                    )}
                   </CardContent>
                 </Card>
               ))}
             </div>
+            )}
           </div>
 
           {/* CTA Section */}

@@ -2,15 +2,118 @@ import { Link, useNavigate } from "react-router";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
-import { LayoutDashboard, BriefcaseBusiness, Globe, BookOpen, DollarSign, User, LogOut, Moon, Sun } from "lucide-react";
+import { LayoutDashboard, BriefcaseBusiness, Globe, BookOpen, DollarSign, User, LogOut, Moon, Sun, ShieldAlert } from "lucide-react";
 import { useTheme } from "../components/ThemeProvider";
 import { useUnlock } from "../contexts/UnlockContext";
+import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../../lib/supabase";
+import { useEffect, useState } from "react";
+import { formatDistanceToNow } from "date-fns";
 
 export default function Dashboard() {
   const { theme, toggleTheme } = useTheme();
   const { isUnlocked } = useUnlock();
+  const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
+
+  const [stats, setStats] = useState({
+    activeJobs: 0,
+    newJobs: 3,
+    applications: 0,
+    guidesUnlocked: 0,
+    successRate: 0,
+  });
+  const [activities, setActivities] = useState<any[]>([]);
+  const [loadingStats, setLoadingStats] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (!user) {
+        setLoadingStats(false);
+        return;
+      }
+
+      try {
+        // Fetch total active jobs counts
+        const { count: aiJobsCount } = await supabase
+          .from("ai_jobs")
+          .select("*", { count: "exact", head: true });
+
+        const { count: remoteJobsCount } = await supabase
+          .from("remote_jobs")
+          .select("*", { count: "exact", head: true });
+
+        // Fetch new jobs (added in last 7 days)
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const sevenDaysAgoStr = sevenDaysAgo.toISOString();
+
+        const { count: newAiJobsCount } = await supabase
+          .from("ai_jobs")
+          .select("*", { count: "exact", head: true })
+          .gte("created_at", sevenDaysAgoStr);
+
+        const { count: newRemoteJobsCount } = await supabase
+          .from("remote_jobs")
+          .select("*", { count: "exact", head: true })
+          .gte("created_at", sevenDaysAgoStr);
+
+        // Fetch applications for user
+        const { count: applicationsCount } = await supabase
+          .from("applications")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id);
+
+        // Calculate guides unlocked
+        let finalGuidesCount = 0;
+        if (isUnlocked || isAdmin) {
+          const { count: allGuidesCount } = await supabase
+            .from("guides")
+            .select("*", { count: "exact", head: true });
+          finalGuidesCount = allGuidesCount || 0;
+        } else {
+          const { count: guidesUnlockedCount } = await supabase
+            .from("user_guides")
+            .select("*", { count: "exact", head: true })
+            .eq("user_id", user.id);
+          finalGuidesCount = guidesUnlockedCount || 0;
+        }
+
+        // Fetch user stats (e.g. success rate)
+        const { data: userStats } = await supabase
+          .from("user_stats")
+          .select("success_rate")
+          .eq("user_id", user.id)
+          .single();
+
+        // Fetch recent activities
+        const { data: recentActivities } = await supabase
+          .from("user_activity")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(5);
+
+        if (recentActivities) {
+          setActivities(recentActivities);
+        }
+
+        setStats({
+          activeJobs: (aiJobsCount || 0) + (remoteJobsCount || 0),
+          newJobs: (newAiJobsCount || 0) + (newRemoteJobsCount || 0),
+          applications: applicationsCount || 0,
+          guidesUnlocked: finalGuidesCount,
+          successRate: userStats?.success_rate || 0,
+        });
+      } catch (error) {
+        console.error("Error fetching Dashboard stats:", error);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+
+    fetchStats();
+  }, [user, isUnlocked]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -64,6 +167,14 @@ export default function Dashboard() {
         </nav>
 
         <div className="space-y-2 pt-4 border-t border-border">
+          {isAdmin && (
+            <Link to="/admin">
+              <Button variant="ghost" className="w-full justify-start gap-2 text-primary">
+                <ShieldAlert className="w-4 h-4" />
+                Admin Panel
+              </Button>
+            </Link>
+          )}
           <Button variant="ghost" className="w-full justify-start gap-2">
             <User className="w-4 h-4" />
             Profile
@@ -97,17 +208,21 @@ export default function Dashboard() {
             <Card>
               <CardHeader className="pb-3">
                 <CardDescription>Active Jobs</CardDescription>
-                <CardTitle className="text-3xl">24</CardTitle>
+                <CardTitle className="text-3xl">
+                  {loadingStats ? "-" : stats.activeJobs}
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <Badge className="bg-primary/10 text-primary border-0">+3 new</Badge>
+                <Badge className="bg-primary/10 text-primary border-0">+{stats.newJobs} new</Badge>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="pb-3">
                 <CardDescription>Applications</CardDescription>
-                <CardTitle className="text-3xl">12</CardTitle>
+                <CardTitle className="text-3xl">
+                  {loadingStats ? "-" : stats.applications}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <Badge className="bg-secondary/10 text-secondary border-0">In progress</Badge>
@@ -117,10 +232,12 @@ export default function Dashboard() {
             <Card>
               <CardHeader className="pb-3">
                 <CardDescription>Guides Unlocked</CardDescription>
-                <CardTitle className="text-3xl">{isUnlocked ? "6" : "0"}</CardTitle>
+                <CardTitle className="text-3xl">
+                  {loadingStats ? "-" : stats.guidesUnlocked}
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                {isUnlocked ? (
+                {stats.guidesUnlocked > 0 || isUnlocked ? (
                   <Badge className="bg-primary/10 text-primary border-0">All Access</Badge>
                 ) : (
                   <Badge className="bg-muted text-muted-foreground border-0">Get started</Badge>
@@ -131,10 +248,14 @@ export default function Dashboard() {
             <Card>
               <CardHeader className="pb-3">
                 <CardDescription>Success Rate</CardDescription>
-                <CardTitle className="text-3xl">85%</CardTitle>
+                <CardTitle className="text-3xl">
+                   {loadingStats ? "-" : `${stats.successRate}%`}
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <Badge className="bg-accent/10 text-accent-foreground border-0">Excellent</Badge>
+                <Badge className="bg-accent/10 text-accent-foreground border-0">
+                  {stats.successRate >= 80 ? 'Excellent' : 'Good'}
+                </Badge>
               </CardContent>
             </Card>
           </div>
@@ -255,22 +376,30 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-2 h-2 rounded-full bg-primary"></div>
-                  <div className="flex-1">
-                    <p className="font-medium">Account unlocked</p>
-                    <p className="text-sm text-muted-foreground">Welcome to WorkAI Academy!</p>
+                {loadingStats ? (
+                  <p className="text-sm text-muted-foreground">Loading activity...</p>
+                ) : activities.length > 0 ? (
+                  activities.map((activity: any) => (
+                    <div key={activity.id} className="flex items-center gap-4">
+                      <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0"></div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{activity.title}</p>
+                        {activity.description && <p className="text-sm text-muted-foreground truncate">{activity.description}</p>}
+                      </div>
+                      <span className="text-sm text-muted-foreground whitespace-nowrap">
+                        {formatDistanceToNow(new Date(activity.created_at), { addSuffix: true })}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex items-center gap-4">
+                    <div className="w-2 h-2 rounded-full bg-muted flex-shrink-0"></div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">No recent activity</p>
+                      <p className="text-sm text-muted-foreground truncate">Apply for jobs or unlock guides to get started</p>
+                    </div>
                   </div>
-                  <span className="text-sm text-muted-foreground">Just now</span>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="w-2 h-2 rounded-full bg-muted"></div>
-                  <div className="flex-1">
-                    <p className="font-medium">Profile created</p>
-                    <p className="text-sm text-muted-foreground">Your profile is ready</p>
-                  </div>
-                  <span className="text-sm text-muted-foreground">2 mins ago</span>
-                </div>
+                )}
               </div>
             </CardContent>
           </Card>

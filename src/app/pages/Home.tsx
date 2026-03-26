@@ -5,6 +5,58 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Sparkles, BriefcaseBusiness, GraduationCap, Shield, Zap, Target, CheckCircle2 } from "lucide-react";
+import { motion } from "motion/react";
+
+const testimonials = [
+  {
+    id: 1,
+    name: "Michael Chen",
+    role: "Data Annotator at Outlier AI",
+    initials: "MC",
+    text: "WorkAI Academy helped me land my first AI training job. The application guides are comprehensive and helped me avoid common pitfalls.",
+    color: "primary"
+  },
+  {
+    id: 2,
+    name: "Sarah Jenkins",
+    role: "AI Trainer at Scale AI",
+    initials: "SJ",
+    text: "Amazing platform! I got accepted into Scale AI within a week of following the premium guides. The interview prep was spot on.",
+    color: "secondary"
+  },
+  {
+    id: 3,
+    name: "David Ochieng",
+    role: "Remote Task Specialist",
+    initials: "DO",
+    text: "The one dollar investment was the best decision I made. I'm now earning a consistent income completing tasks remotely.",
+    color: "accent"
+  },
+  {
+    id: 4,
+    name: "Priya Sharma",
+    role: "Prompt Engineer at Telus",
+    initials: "PS",
+    text: "I had no prior experience, but the step-by-step walkthroughs were easy to follow. I just passed my qualification exams!",
+    color: "primary"
+  },
+  {
+    id: 5,
+    name: "Jessica Taylor",
+    role: "Evaluator at Appen",
+    initials: "JT",
+    text: "The guides saved me so much time. Having all verified requirements in one place means I spend less time searching and more time earning.",
+    color: "secondary"
+  },
+  {
+    id: 6,
+    name: "Ahmed Hassan",
+    role: "AI Quality Assurance",
+    initials: "AH",
+    text: "Highly recommend the Guides pack. The strategies for maximizing hourly rates have consistently increased my weekly earnings.",
+    color: "accent"
+  }
+];
 
 export default function Home() {
   return (
@@ -15,7 +67,7 @@ export default function Home() {
       <section className="py-20 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-3xl mx-auto">
-            <Badge className="mb-4 bg-accent/10 text-accent-foreground border-accent">
+            <Badge className="mb-4 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-colors py-1.5 px-4 text-sm">
               Start Your AI Career Today
             </Badge>
             <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
@@ -273,78 +325,40 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="mb-4">
-                  <div className="flex items-center gap-1 mb-2">
-                    {[...Array(5)].map((_, i) => (
-                      <span key={i} className="text-accent">★</span>
-                    ))}
-                  </div>
-                  <p className="text-muted-foreground italic">
-                    "WorkAI Academy helped me land my first AI training job. The guides are comprehensive and easy to follow!"
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="font-semibold text-primary">JD</span>
-                  </div>
-                  <div>
-                    <p className="font-semibold">Jane Doe</p>
-                    <p className="text-sm text-muted-foreground">AI Trainer at Outlier</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <div className="mb-4">
-                  <div className="flex items-center gap-1 mb-2">
-                    {[...Array(5)].map((_, i) => (
-                      <span key={i} className="text-accent">★</span>
-                    ))}
-                  </div>
-                  <p className="text-muted-foreground italic">
-                    "The $1 investment was the best decision I made. Now I'm earning consistently from remote AI jobs."
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center">
-                    <span className="font-semibold text-secondary">MS</span>
-                  </div>
-                  <div>
-                    <p className="font-semibold">Mike Smith</p>
-                    <p className="text-sm text-muted-foreground">Remote Worker</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <div className="mb-4">
-                  <div className="flex items-center gap-1 mb-2">
-                    {[...Array(5)].map((_, i) => (
-                      <span key={i} className="text-accent">★</span>
-                    ))}
-                  </div>
-                  <p className="text-muted-foreground italic">
-                    "Amazing platform! I got accepted into Scale AI within a week of following the guides."
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center">
-                    <span className="font-semibold text-accent-foreground">SK</span>
-                  </div>
-                  <div>
-                    <p className="font-semibold">Sarah Kim</p>
-                    <p className="text-sm text-muted-foreground">AI Trainer at Scale AI</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          <div className="relative overflow-hidden w-full py-4 -mx-4 px-4">
+            <motion.div 
+              className="flex gap-6 w-max"
+              animate={{ x: ["0%", "-50%"] }}
+              transition={{
+                repeat: Infinity,
+                ease: "linear",
+                duration: 30,
+              }}
+            >
+              {[...testimonials, ...testimonials].map((t, index) => (
+                <Card key={`${t.id}-${index}`} className="w-[350px] flex-shrink-0">
+                  <CardContent className="pt-6 h-full flex flex-col justify-between">
+                    <div className="mb-4">
+                      <div className="flex items-center gap-1 mb-2">
+                        {[...Array(5)].map((_, i) => (
+                          <span key={i} className="text-accent">★</span>
+                        ))}
+                      </div>
+                      <p className="text-muted-foreground italic line-clamp-4">"{t.text}"</p>
+                    </div>
+                    <div className="flex items-center gap-3 mt-auto">
+                      <div className={`w-10 h-10 rounded-full bg-${t.color}/10 flex items-center justify-center`}>
+                        <span className={`font-semibold text-${t.color === 'accent' ? 'accent-foreground' : t.color}`}>{t.initials}</span>
+                      </div>
+                      <div>
+                        <p className="font-semibold">{t.name}</p>
+                        <p className="text-sm text-muted-foreground">{t.role}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </motion.div>
           </div>
         </div>
       </section>

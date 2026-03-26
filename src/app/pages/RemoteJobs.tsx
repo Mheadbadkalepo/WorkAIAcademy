@@ -8,47 +8,29 @@ import { Search, MapPin, Clock, DollarSign } from "lucide-react";
 import { useUnlock } from "../contexts/UnlockContext";
 import { motion } from "motion/react";
 import { Link } from "react-router";
+import { useEffect, useState } from "react";
+import { supabase } from "../../lib/supabase";
+import { Loader2 } from "lucide-react";
 
 export default function RemoteJobs() {
   const { isUnlocked } = useUnlock();
-  const jobs = [
-    {
-      id: 1,
-      company: "Clickworker",
-      title: "Micro Task Worker",
-      type: "Remote",
-      pay: "$8-$12/hour",
-      location: "Worldwide",
-      category: "Micro Tasks",
-    },
-    {
-      id: 2,
-      company: "Remotasks",
-      title: "Task Specialist",
-      type: "Remote",
-      pay: "$10-$15/hour",
-      location: "Global",
-      category: "Data Entry",
-    },
-    {
-      id: 3,
-      company: "Various Platforms",
-      title: "Virtual Assistant",
-      type: "Remote",
-      pay: "$12-$20/hour",
-      location: "Multiple regions",
-      category: "Administrative",
-    },
-    {
-      id: 4,
-      company: "Freelance Platforms",
-      title: "Content Writer",
-      type: "Remote",
-      pay: "$15-$30/hour",
-      location: "Worldwide",
-      category: "Writing",
-    },
-  ];
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        const { data, error } = await supabase.from('remote_jobs').select('*').order('id', { ascending: false });
+        if (!error && data) setJobs(data);
+      } catch (err) {
+        console.error("Error fetching remote jobs:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobs();
+  }, []);
 
   return (
     <div className="min-h-screen">
@@ -97,6 +79,15 @@ export default function RemoteJobs() {
               </div>
             )}
             
+            {loading ? (
+               <div className="flex justify-center py-12">
+                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
+               </div>
+            ) : jobs.length === 0 ? (
+               <div className="text-center py-12 text-muted-foreground">
+                 No remote jobs found. Add some from the Admin Panel.
+               </div>
+            ) : (
             <motion.div 
               className={`grid grid-cols-1 md:grid-cols-2 gap-6 ${!isUnlocked ? "blur-sm pointer-events-none" : ""}`}
               initial="hidden"
@@ -141,14 +132,17 @@ export default function RemoteJobs() {
                         </div>
                       </div>
 
-                      <Button className="w-full bg-secondary hover:bg-secondary/90 mt-auto">
-                        View Details
-                      </Button>
+                      <a href={job.apply_link || "#"} target="_blank" rel="noopener noreferrer" className="block mt-auto">
+                        <Button className="w-full bg-secondary hover:bg-secondary/90">
+                          Apply Now
+                        </Button>
+                      </a>
                     </CardContent>
                   </Card>
                 </motion.div>
               ))}
             </motion.div>
+            )}
           </div>
         </div>
       </section>

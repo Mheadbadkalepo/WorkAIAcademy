@@ -12,14 +12,9 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Admin from "./pages/Admin";
 
-// Guides
-import AppenGuide from "./pages/AppenGuide";
-import RemotaskGuide from "./pages/RemotaskGuide";
-import ClickworkerGuide from "./pages/ClickworkerGuide";
-import OutlierGuide from "./pages/OutlierGuide";
-import TelusGuide from "./pages/TelusGuide";
-import ScaleAIGuide from "./pages/ScaleAIGuide";
+import GuideDetail from "./pages/GuideDetail";
 
 export const router = createBrowserRouter([
   {
@@ -31,16 +26,12 @@ export const router = createBrowserRouter([
       { path: "ai-jobs", Component: AIJobs },
       { path: "remote-jobs", Component: RemoteJobs },
       { path: "guides", Component: Guides },
-      { path: "guides/appen", Component: AppenGuide },
-      { path: "guides/remotasks", Component: RemotaskGuide },
-      { path: "guides/clickworker", Component: ClickworkerGuide },
-      { path: "guides/outlier", Component: OutlierGuide },
-      { path: "guides/telus", Component: TelusGuide },
-      { path: "guides/scale", Component: ScaleAIGuide },
+      { path: "guides/:slug", Component: GuideDetail },
       { path: "payment", Component: Payment },
       { path: "login", Component: Login },
       { path: "register", Component: Register },
       { path: "dashboard", element: createElement(ProtectedRoute, null, createElement(Dashboard)) },
+      { path: "admin", element: createElement(ProtectedRoute, null, createElement(Admin)) },
       { path: "*", Component: NotFound },
     ],
   },
