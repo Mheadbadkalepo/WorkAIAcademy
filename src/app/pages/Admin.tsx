@@ -170,12 +170,12 @@ export default function Admin() {
       </div>
       <div className="space-y-1"><Label>Description (Short summary)</Label><Input value={formData.description || ""} onChange={e => setFormData({...formData, description: e.target.value})}/></div>
       <div className="space-y-1">
-        <Label>Full Guide Content (Markdown supported)</Label>
+        <Label>Full Guide Content (Markdown, Tables, and Video Links supported)</Label>
         <textarea 
           value={formData.content || ""} 
           onChange={e => setFormData({...formData, content: e.target.value})}
           className="w-full min-h-[300px] p-3 rounded-md border border-input bg-transparent text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          placeholder="# Phase 1: Foundation&#10;&#10;Lesson 1: Understanding..."
+          placeholder="# Phase 1: Foundation&#10;&#10;Lesson 1: Understanding...&#10;&#10;[Watch this video](https://youtube.com/watch?v=...)&#10;Or paste a raw link: https://example.com/video.mp4"
         />
       </div>
       <div className="flex gap-2">

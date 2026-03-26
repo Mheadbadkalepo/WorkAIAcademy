@@ -5,9 +5,9 @@ import { useUnlock } from "../contexts/UnlockContext";
 import { Card, CardContent } from "../components/ui/card";
 
 export default function OutlierGuide() {
-  const { isUnlocked } = useUnlock();
-  
-  if (!isUnlocked) {
+  const { isUnlocked, highGuidesUnlocked } = useUnlock();
+
+  if (!isUnlocked || !highGuidesUnlocked) {
     return <Navigate to="/guides" />;
   }
 
@@ -151,7 +151,7 @@ export default function OutlierGuide() {
 
           <section>
             <h2 className="text-3xl font-bold mb-6 border-b pb-2">Suggested Video Guides (2026)</h2>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-8 md:grid-cols-1">
               <Card>
                 <CardContent className="pt-6 flex flex-col h-full">
                   <h3 className="font-semibold mb-2">How to Create an Outlier Account Step-by-Step</h3>
@@ -211,3 +211,4 @@ export default function OutlierGuide() {
     </div>
   );
 }
+

@@ -1,21 +1,26 @@
 import { Link } from "react-router";
-import { Moon, Sun, Menu } from "lucide-react";
+import { Moon, Sun, Menu, User, LogOut, LayoutDashboard } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import { Button } from "./ui/button";
 import { useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import { supabase } from "../../lib/supabase";
 
 export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
+  const { user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+  };
 
   return (
     <nav className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold">W</span>
-            </div>
+            <img src="/logo.png" alt="WorkAI Academy Logo" className="w-9 h-9 object-contain" />
             <span className="font-bold text-xl text-foreground">WorkAI Academy</span>
           </Link>
 
@@ -47,12 +52,41 @@ export default function Navbar() {
             >
               {theme === "light" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
             </Button>
-            <Link to="/login" className="hidden md:block">
-              <Button variant="ghost">Login</Button>
-            </Link>
-            <Link to="/register">
-              <Button className="bg-primary hover:bg-primary/90">Unlock Platform</Button>
-            </Link>
+
+            {user ? (
+              <>
+                <Link to="/dashboard" className="hidden md:block">
+                  <Button variant="ghost" size="sm" className="flex items-center gap-1">
+                    <LayoutDashboard className="h-4 w-4" />
+                    Dashboard
+                  </Button>
+                </Link>
+                <Link to="/profile" className="hidden md:block">
+                  <Button variant="ghost" size="sm" className="flex items-center gap-1">
+                    <User className="h-4 w-4" />
+                    Profile
+                  </Button>
+                </Link>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="hidden md:flex items-center gap-1"
+                  onClick={handleSignOut}
+                >
+                  <LogOut className="h-4 w-4" />
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="hidden md:block">
+                  <Button variant="ghost">Login</Button>
+                </Link>
+                <Link to="/register">
+                  <Button className="bg-primary hover:bg-primary/90">Unlock Platform</Button>
+                </Link>
+              </>
+            )}
             <Button
               variant="ghost"
               size="icon"
@@ -67,48 +101,20 @@ export default function Navbar() {
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
           <div className="md:hidden py-4 space-y-2">
-            <Link
-              to="/"
-              className="block py-2 text-foreground/80 hover:text-foreground transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Home
-            </Link>
-            <Link
-              to="/ai-jobs"
-              className="block py-2 text-foreground/80 hover:text-foreground transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              AI Jobs
-            </Link>
-            <Link
-              to="/remote-jobs"
-              className="block py-2 text-foreground/80 hover:text-foreground transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Remote Jobs
-            </Link>
-            <Link
-              to="/guides"
-              className="block py-2 text-foreground/80 hover:text-foreground transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Guides
-            </Link>
-            <Link
-              to="/pricing"
-              className="block py-2 text-foreground/80 hover:text-foreground transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Pricing
-            </Link>
-            <Link
-              to="/login"
-              className="block py-2 text-foreground/80 hover:text-foreground transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Login
-            </Link>
+            <Link to="/" className="block py-2 text-foreground/80 hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>Home</Link>
+            <Link to="/ai-jobs" className="block py-2 text-foreground/80 hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>AI Jobs</Link>
+            <Link to="/remote-jobs" className="block py-2 text-foreground/80 hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>Remote Jobs</Link>
+            <Link to="/guides" className="block py-2 text-foreground/80 hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>Guides</Link>
+            <Link to="/pricing" className="block py-2 text-foreground/80 hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>Pricing</Link>
+            {user ? (
+              <>
+                <Link to="/dashboard" className="block py-2 text-foreground/80 hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
+                <Link to="/profile" className="block py-2 text-foreground/80 hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>Profile</Link>
+                <button onClick={() => { handleSignOut(); setMobileMenuOpen(false); }} className="block py-2 text-foreground/80 hover:text-foreground transition-colors w-full text-left">Sign Out</button>
+              </>
+            ) : (
+              <Link to="/login" className="block py-2 text-foreground/80 hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>Login</Link>
+            )}
           </div>
         )}
       </div>

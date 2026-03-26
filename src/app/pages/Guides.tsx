@@ -3,53 +3,39 @@ import Footer from "../components/Footer";
 import { Link } from "react-router";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import { Badge } from "../components/ui/badge";
-import { Lock, BookOpen, CheckCircle2, Loader2 } from "lucide-react";
+import { Lock, BookOpen, CheckCircle2 } from "lucide-react";
 import { useUnlock } from "../contexts/UnlockContext";
 import { useAuth } from "../contexts/AuthContext";
-import { useEffect, useState } from "react";
-import { supabase } from "../../lib/supabase";
 
 export default function Guides() {
-  const { isUnlocked } = useUnlock();
-  const { user, isAdmin } = useAuth();
-  const [guides, setGuides] = useState<any[]>([]);
-  const [userGuideIds, setUserGuideIds] = useState<number[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { isUnlocked, lowGuidesUnlocked, highGuidesUnlocked } = useUnlock();
+  const { isAdmin } = useAuth();
+  
+  const hardcodedGuides = [
+    { id: 1, title: 'Appen Account Guide', description: 'Master the Appen ecosystem and land high-paying AI annotation tasks.', path: 'appen', lessons: 12, tier: 'low' },
+    { id: 2, title: 'Outlier Account Guide', description: 'Learn how to navigate Outlier completely.', path: 'outlier', lessons: 10, tier: 'high' },
+    { id: 3, title: 'Remotask Account Guide', description: 'Become a top Remotasker.', path: 'remotask', lessons: 8, tier: 'low' },
+    { id: 4, title: 'Telus Guide', description: 'Insights for Telus International rating.', path: 'telus', lessons: 14, tier: 'high' },
+    { id: 5, title: 'Scale AI Guide', description: 'Advanced tasks via Scale AI.', path: 'scaleai', lessons: 9, tier: 'high' },
+    { id: 6, title: 'Clickworker Guide', description: 'Maximize your earnings on Clickworker.', path: 'clickworker', lessons: 7, tier: 'low' }
+  ];
 
-  useEffect(() => {
-    const fetchGuides = async () => {
-      try {
-        const { data, error } = await supabase.from('guides').select('*').order('id', { ascending: true });
-        if (!error && data) setGuides(data);
+  const isLowLocked = (guide: any) => {
+    if (isAdmin) return false;
+    if (!isUnlocked) return true; // Must unlock platform first
+    if (lowGuidesUnlocked) return false;
+    return true; // Platform unlocked but guides not purchased
+  };
 
-        if (user) {
-          const { data: ugData } = await supabase
-            .from('user_guides')
-            .select('guide_id')
-            .eq('user_id', user.id);
-          
-          if (ugData) {
-            setUserGuideIds(ugData.map(ug => ug.guide_id));
-          }
-        }
-      } catch (err) {
-        console.error("Error fetching guides:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchGuides();
-  }, [user]);
-
-  const isGuideLocked = (guideId: number) => {
-    if (isUnlocked || isAdmin) return false;
-    if (userGuideIds.includes(guideId)) return false;
+  const isHighLocked = (guide: any) => {
+    if (isAdmin) return false;
+    if (!isUnlocked) return true;
+    if (highGuidesUnlocked) return false;
     return true;
   };
 
-  const lowPayingGuides = guides.filter(g => g.tier === 'low').map(g => ({ ...g, locked: isGuideLocked(g.id) }));
-  const highPayingGuides = guides.filter(g => g.tier === 'high').map(g => ({ ...g, locked: isGuideLocked(g.id) }));
+  const lowPayingGuides = hardcodedGuides.filter(g => g.tier === 'low').map(g => ({ ...g, locked: isLowLocked(g) }));
+  const highPayingGuides = hardcodedGuides.filter(g => g.tier === 'high').map(g => ({ ...g, locked: isHighLocked(g) }));
 
   return (
     <div className="min-h-screen">
@@ -71,20 +57,18 @@ export default function Guides() {
                 <h2 className="text-2xl font-bold mb-2">Low Paying Guides</h2>
                 <p className="text-muted-foreground">Perfect for beginners - $2</p>
               </div>
-              <a href="https://paystack.shop/pay/0i3uddyszm" target="_blank" rel="noopener noreferrer">
-                <Button className="bg-primary hover:bg-primary/90">
-                  Unlock All - $2
-                </Button>
-              </a>
+              {/* Unlock CTA for low paying guides */}
+              {!isUnlocked ? (
+                <Link to="/payment">
+                  <Button className="bg-primary hover:bg-primary/90">Unlock Platform First - $1</Button>
+                </Link>
+              ) : !lowGuidesUnlocked ? (
+                <a href="https://paystack.shop/pay/0i3uddyszm" target="_blank" rel="noopener noreferrer">
+                  <Button className="bg-primary hover:bg-primary/90">Unlock Low Guides - $2</Button>
+                </a>
+              ) : null}
             </div>
 
-            {loading ? (
-               <div className="flex justify-center py-12">
-                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
-               </div>
-            ) : lowPayingGuides.length === 0 ? (
-               <div className="text-center py-8 text-muted-foreground">No low paying guides found. Add some from the Admin Panel.</div>
-            ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {lowPayingGuides.map((guide) => (
                 <Card key={guide.id} className="border-2 relative overflow-hidden">
@@ -114,9 +98,17 @@ export default function Guides() {
                       </div>
                     </div>
                     {guide.locked ? (
-                      <Button variant="outline" className="w-full" disabled>
-                        Locked
-                      </Button>
+                      <div className="space-y-2">
+                        {!isUnlocked ? (
+                          <Link to="/payment" className="w-full block">
+                            <Button variant="outline" className="w-full text-xs">🔐 Unlock Platform First ($1)</Button>
+                          </Link>
+                        ) : (
+                          <a href="https://paystack.shop/pay/0i3uddyszm" target="_blank" rel="noopener noreferrer" className="w-full block">
+                            <Button variant="outline" className="w-full text-xs">🔓 Unlock Low Guides ($2)</Button>
+                          </a>
+                        )}
+                      </div>
                     ) : (
                       <Link to={`/guides/${guide.path}`} className="w-full block">
                         <Button variant="outline" className="w-full cursor-pointer hover:bg-primary/10">
@@ -128,7 +120,6 @@ export default function Guides() {
                 </Card>
               ))}
             </div>
-            )}
           </div>
 
           {/* High Paying Guides */}
@@ -138,20 +129,18 @@ export default function Guides() {
                 <h2 className="text-2xl font-bold mb-2">High Paying Guides</h2>
                 <p className="text-muted-foreground">Advanced opportunities - $5</p>
               </div>
-              <a href="https://paystack.shop/pay/efowzo7m02" target="_blank" rel="noopener noreferrer">
-                <Button className="bg-secondary hover:bg-secondary/90">
-                  Unlock All - $5
-                </Button>
-              </a>
+              {/* Unlock CTA for high paying guides */}
+              {!isUnlocked ? (
+                <Link to="/payment">
+                  <Button className="bg-secondary hover:bg-secondary/90">Unlock Platform First - $1</Button>
+                </Link>
+              ) : !highGuidesUnlocked ? (
+                <a href="https://paystack.shop/pay/efowzo7m02" target="_blank" rel="noopener noreferrer">
+                  <Button className="bg-secondary hover:bg-secondary/90">Unlock High Guides - $5</Button>
+                </a>
+              ) : null}
             </div>
 
-            {loading ? (
-               <div className="flex justify-center py-12">
-                 <Loader2 className="w-8 h-8 animate-spin text-secondary" />
-               </div>
-            ) : highPayingGuides.length === 0 ? (
-               <div className="text-center py-8 text-muted-foreground">No high paying guides found. Add some from the Admin Panel.</div>
-            ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {highPayingGuides.map((guide) => (
                 <Card key={guide.id} className="border-2 relative overflow-hidden">
@@ -181,9 +170,17 @@ export default function Guides() {
                       </div>
                     </div>
                     {guide.locked ? (
-                      <Button variant="outline" className="w-full" disabled>
-                        Locked
-                      </Button>
+                      <div className="space-y-2">
+                        {!isUnlocked ? (
+                          <Link to="/payment" className="w-full block">
+                            <Button variant="outline" className="w-full text-xs">🔐 Unlock Platform First ($1)</Button>
+                          </Link>
+                        ) : (
+                          <a href="https://paystack.shop/pay/efowzo7m02" target="_blank" rel="noopener noreferrer" className="w-full block">
+                            <Button variant="outline" className="w-full text-xs">🔓 Unlock High Guides ($5)</Button>
+                          </a>
+                        )}
+                      </div>
                     ) : (
                       <Link to={`/guides/${guide.path}`} className="w-full block">
                         <Button variant="outline" className="w-full cursor-pointer hover:bg-secondary/10">
@@ -195,7 +192,6 @@ export default function Guides() {
                 </Card>
               ))}
             </div>
-            )}
           </div>
 
           {/* CTA Section */}

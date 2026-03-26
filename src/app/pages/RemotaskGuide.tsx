@@ -5,9 +5,9 @@ import { useUnlock } from "../contexts/UnlockContext";
 import { Card, CardContent } from "../components/ui/card";
 
 export default function RemotaskGuide() {
-  const { isUnlocked } = useUnlock();
-  
-  if (!isUnlocked) {
+  const { isUnlocked, lowGuidesUnlocked } = useUnlock();
+
+  if (!isUnlocked || !lowGuidesUnlocked) {
     return <Navigate to="/guides" />;
   }
 
@@ -103,7 +103,7 @@ export default function RemotaskGuide() {
 
           <section>
             <h2 className="text-3xl font-bold mb-6 border-b pb-2">Suggested Video Tutorials (2026)</h2>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-8 md:grid-cols-1">
               <Card>
                 <CardContent className="pt-6 flex flex-col h-full">
                   <h3 className="font-semibold mb-2">Remotasks Tutorial for Beginners</h3>
@@ -163,3 +163,4 @@ export default function RemotaskGuide() {
     </div>
   );
 }
+

@@ -137,8 +137,8 @@ export default function Payment() {
       <div className="min-h-screen">
         <Navbar />
         <div className="py-20 px-4">
-          <div className="max-w-md mx-auto text-center">
-            <Card className="border-2 border-accent">
+          <div className="max-w-2xl mx-auto text-center">
+            <Card className="border-2 border-accent mb-8">
               <CardContent className="pt-12 pb-8">
                 <div className="w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-6">
                   <CheckCircle2 className="w-12 h-12 text-accent" />
@@ -154,6 +154,46 @@ export default function Payment() {
                 </Link>
               </CardContent>
             </Card>
+
+            {/* Upsell Cards */}
+            <h2 className="text-2xl font-bold mb-6">Upgrade Your Access</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <Card className="border-2 border-primary/20 hover:border-primary/50 transition-colors">
+                <CardContent className="pt-8 pb-6">
+                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl">📘</span>
+                  </div>
+                  <CardTitle className="mb-2">Low Paying Guides</CardTitle>
+                  <CardDescription className="mb-4">
+                    Appen, Remotask & Clickworker
+                  </CardDescription>
+                  <p className="text-3xl font-bold text-primary mb-4">$2</p>
+                  <a href="https://paystack.shop/pay/0i3uddyszm" target="_blank" rel="noopener noreferrer" className="block">
+                    <Button className="w-full bg-primary hover:bg-primary/90">
+                      Unlock Low Guides
+                    </Button>
+                  </a>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 border-secondary/20 hover:border-secondary/50 transition-colors">
+                <CardContent className="pt-8 pb-6">
+                  <div className="w-14 h-14 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl">📕</span>
+                  </div>
+                  <CardTitle className="mb-2">High Paying Guides</CardTitle>
+                  <CardDescription className="mb-4">
+                    Outlier, Telus & Scale AI
+                  </CardDescription>
+                  <p className="text-3xl font-bold text-secondary mb-4">$5</p>
+                  <a href="https://paystack.shop/pay/efowzo7m02" target="_blank" rel="noopener noreferrer" className="block">
+                    <Button className="w-full bg-secondary hover:bg-secondary/90">
+                      Unlock High Guides
+                    </Button>
+                  </a>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
         <Footer />

@@ -126,9 +126,7 @@ export default function Dashboard() {
       <aside className="w-64 border-r border-border bg-sidebar p-4 flex flex-col">
         <div className="mb-8">
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold">W</span>
-            </div>
+            <img src="/logo.png" alt="WorkAI Academy Logo" className="w-9 h-9 object-contain" />
             <span className="font-bold text-lg">WorkAI Academy</span>
           </Link>
         </div>
@@ -175,10 +173,12 @@ export default function Dashboard() {
               </Button>
             </Link>
           )}
-          <Button variant="ghost" className="w-full justify-start gap-2">
-            <User className="w-4 h-4" />
-            Profile
-          </Button>
+          <Link to="/profile">
+            <Button variant="ghost" className="w-full justify-start gap-2">
+              <User className="w-4 h-4" />
+              Profile
+            </Button>
+          </Link>
           <Button
             variant="ghost"
             className="w-full justify-start gap-2"

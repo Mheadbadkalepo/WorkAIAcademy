@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { Button } from "../components/ui/button";
@@ -8,7 +8,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Badge } from "../components/ui/badge";
 import { supabase } from "../../lib/supabase";
-import { Loader2 } from "lucide-react";
+import { Loader2, MailCheck } from "lucide-react";
 
 export default function Register() {
   const [fullName, setFullName] = useState("");
@@ -17,7 +17,7 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const navigate = useNavigate();
+  const [registered, setRegistered] = useState(false);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,9 +38,48 @@ export default function Register() {
       setError(error.message);
       setLoading(false);
     } else {
-      navigate("/dashboard");
+      setRegistered(true);
+      setLoading(false);
     }
   };
+  if (registered) {
+    return (
+      <div className="min-h-screen">
+        <Navbar />
+        <section className="py-20 px-4">
+          <div className="max-w-md mx-auto">
+            <Card>
+              <CardContent className="pt-10 pb-10 text-center space-y-4">
+                <div className="flex justify-center">
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                    <MailCheck className="w-8 h-8 text-primary" />
+                  </div>
+                </div>
+                <h2 className="text-2xl font-bold">Check Your Email!</h2>
+                <p className="text-muted-foreground">
+                  We sent a confirmation link to <strong>{email}</strong>. Please open your email and click the link to activate your account before logging in.
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Didn't receive it? Check your spam folder or{" "}
+                  <button
+                    onClick={() => setRegistered(false)}
+                    className="text-primary hover:underline font-semibold"
+                  >
+                    try again
+                  </button>.
+                </p>
+                <Link to="/login">
+                  <Button className="w-full mt-4 bg-primary hover:bg-primary/90">Go to Login</Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -114,9 +153,15 @@ export default function Register() {
                   />
                 </div>
 
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+                  <p className="text-sm text-center text-muted-foreground">
+                    📧 <strong>Important:</strong> After creating your account, check your email inbox for a confirmation link before logging in.
+                  </p>
+                </div>
+
                 <div className="bg-accent/10 border border-accent/20 rounded-lg p-4">
                   <p className="text-sm text-center text-muted-foreground">
-                    After creating your account, you will unlock the platform for $1
+                    After confirming your email, you can unlock the platform for $1
                   </p>
                 </div>
 
