@@ -9,8 +9,10 @@ import { Label } from "../components/ui/label";
 import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group";
 import { Smartphone, CreditCard, Wallet, Loader2, CheckCircle2 } from "lucide-react";
 import { useUnlock } from "../contexts/UnlockContext";
+import { useAuth } from "../contexts/AuthContext";
 import confetti from "canvas-confetti";
 import { usePaystackPayment } from "react-paystack";
+import { supabase } from "../../lib/supabase";
 
 export default function Payment() {
   const [paymentMethod, setPaymentMethod] = useState("card"); // default to custom card UI
@@ -21,14 +23,55 @@ export default function Payment() {
   const [cvv, setCvv] = useState("");
   const [processing, setProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
-  const { setUnlocked } = useUnlock();
+  const { setUnlocked, refreshUnlocks } = useUnlock();
+  const { user } = useAuth();
+
+  const recordSuccessfulPayment = async (reference: string, method: string) => {
+    if (!user) return;
+
+    const accessPayload = {
+      user_id: user.id,
+      platform_unlocked: true,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { error: accessError } = await supabase
+      .from("user_access")
+      .upsert(accessPayload, { onConflict: "user_id" });
+
+    if (accessError) {
+      console.error("Failed to persist access state:", accessError.message);
+    }
+
+    const { error: paymentError } = await supabase
+      .from("payment_records")
+      .insert({
+        user_id: user.id,
+        payment_reference: reference,
+        payment_method: method,
+        product: "platform",
+        amount: 1.0,
+        currency: "USD",
+        status: "success",
+      });
+
+    if (paymentError) {
+      console.error("Failed to save payment record:", paymentError.message);
+    }
+
+    await refreshUnlocks();
+  };
 
   const paystackConfig = {
     reference: (new Date()).getTime().toString(),
-    email: email,
+    email: email || user?.email || "",
     amount: 100, // 100 cents = $1.00 Paystack parses amount in subunits. Note: Depending on the country, USD amount=100 might mean 100 cents. If it's Kobo it means 1 Naira.
     currency: "USD",
     publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
+    metadata: {
+      user_id: user?.id || null,
+      product: "platform",
+    },
   };
 
   const initializePayment = usePaystackPayment(paystackConfig);
@@ -40,6 +83,7 @@ export default function Payment() {
       const data = await res.json();
       
       if (data.data && data.data.status === 'success') {
+        await recordSuccessfulPayment(reference.reference, "paystack");
         setProcessing(false);
         setSuccess(true);
         setUnlocked(true);
@@ -89,6 +133,10 @@ export default function Payment() {
         body: JSON.stringify({
           email,
           amount: "100", // Paystack expects lowest denomination (cents)
+          metadata: {
+            user_id: user?.id || null,
+            product: "platform",
+          },
           card: {
             number: cardNumber.replace(/\s/g, ''),
             cvv: cvv,
@@ -97,8 +145,9 @@ export default function Payment() {
           }
         })
       }).then(res => res.json())
-        .then(data => {
+        .then(async (data) => {
           if (data.data?.status === 'success' || data.status === true) {
+             await recordSuccessfulPayment(data.data?.reference || `card-${Date.now()}`, "card");
              setProcessing(false);
              setSuccess(true);
              setUnlocked(true);
@@ -120,6 +169,7 @@ export default function Payment() {
     } else {
       setProcessing(true);
       setTimeout(() => {
+        void recordSuccessfulPayment(`mpesa-${Date.now()}`, "mpesa");
         setProcessing(false);
         setSuccess(true);
         setUnlocked(true);
