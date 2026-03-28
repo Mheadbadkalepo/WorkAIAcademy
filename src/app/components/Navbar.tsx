@@ -41,6 +41,9 @@ export default function Navbar() {
             <Link to="/pricing" className="text-foreground/80 hover:text-foreground transition-colors">
               Pricing
             </Link>
+            <Link to="/consultation" className="text-foreground/80 hover:text-foreground transition-colors">
+              Consultation
+            </Link>
           </div>
 
           <div className="flex items-center gap-3">
@@ -106,6 +109,7 @@ export default function Navbar() {
             <Link to="/remote-jobs" className="block py-2 text-foreground/80 hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>Remote Jobs</Link>
             <Link to="/guides" className="block py-2 text-foreground/80 hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>Guides</Link>
             <Link to="/pricing" className="block py-2 text-foreground/80 hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>Pricing</Link>
+            <Link to="/consultation" className="block py-2 text-foreground/80 hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>Consultation</Link>
             {user ? (
               <>
                 <Link to="/dashboard" className="block py-2 text-foreground/80 hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>

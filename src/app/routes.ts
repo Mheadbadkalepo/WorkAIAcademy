@@ -24,6 +24,7 @@ import Profile from "./pages/Profile";
 import ProfileSetup from "./pages/ProfileSetup";
 
 import GuideDetail from "./pages/GuideDetail";
+import Consultation from "./pages/Consultation";
 
 export const router = createBrowserRouter([
   {
@@ -32,6 +33,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, Component: Home },
       { path: "pricing", Component: Pricing },
+      { path: "consultation", Component: Consultation },
       { path: "ai-jobs", Component: AIJobs },
       { path: "remote-jobs", Component: RemoteJobs },
       { path: "guides", Component: Guides },

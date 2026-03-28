@@ -5,18 +5,76 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 import { Badge } from "../components/ui/badge";
 import { Input } from "../components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import { Search, MapPin, Clock, DollarSign, ExternalLink, Lock } from "lucide-react";
+import { Search, MapPin, Clock, DollarSign, ExternalLink } from "lucide-react";
 import { useUnlock } from "../contexts/UnlockContext";
 import { motion } from "motion/react";
 import { Link } from "react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { Loader2 } from "lucide-react";
+
+function parseHourlyPay(pay: string | null | undefined): number | null {
+  if (!pay) return null;
+  const m = pay.replace(/,/g, "").match(/(\d+(\.\d+)?)/);
+  if (!m) return null;
+  return parseFloat(m[1]);
+}
+
+function matchesPayFilter(payStr: string | null | undefined, filter: string): boolean {
+  if (filter === "all") return true;
+  const n = parseHourlyPay(payStr);
+  if (n == null) return false;
+  if (filter === "low") return n >= 10 && n < 15;
+  if (filter === "medium") return n >= 15 && n < 20;
+  if (filter === "high") return n >= 20;
+  return true;
+}
+
+function matchesCompany(company: string | null | undefined, filter: string): boolean {
+  if (filter === "all") return true;
+  const c = (company || "").toLowerCase();
+  const map: Record<string, string[]> = {
+    outlier: ["outlier"],
+    scale: ["scale"],
+    telus: ["telus"],
+    appen: ["appen"],
+  };
+  const needles = map[filter];
+  return needles?.some((n) => c.includes(n)) ?? false;
+}
 
 export default function AIJobs() {
   const { isUnlocked } = useUnlock();
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchInput, setSearchInput] = useState("");
+  const [payFilter, setPayFilter] = useState("all");
+  const [companyFilter, setCompanyFilter] = useState("all");
+  const [applied, setApplied] = useState({ search: "", pay: "all", company: "all" });
+
+  const applyFilters = () => {
+    setApplied({
+      search: searchInput.trim(),
+      pay: payFilter,
+      company: companyFilter,
+    });
+  };
+
+  const filteredJobs = useMemo(() => {
+    return jobs.filter((job) => {
+      if (applied.search) {
+        const q = applied.search.toLowerCase();
+        const hay = [job.title, job.company, job.description, job.requirements]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      if (!matchesPayFilter(job.pay, applied.pay)) return false;
+      if (!matchesCompany(job.company, applied.company)) return false;
+      return true;
+    });
+  }, [jobs, applied]);
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -112,12 +170,18 @@ export default function AIJobs() {
           </div>
 
           {/* Search and Filter */}
-          <div className="flex flex-col md:flex-row gap-4 mb-8">
+          <div className="flex flex-col md:flex-row gap-4 mb-8 md:items-center">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input placeholder="Search jobs..." className="pl-10" />
+              <Input
+                placeholder="Search jobs..."
+                className="pl-10"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && applyFilters()}
+              />
             </div>
-            <Select>
+            <Select value={payFilter} onValueChange={setPayFilter}>
               <SelectTrigger className="w-full md:w-48">
                 <SelectValue placeholder="Pay Rate" />
               </SelectTrigger>
@@ -128,7 +192,7 @@ export default function AIJobs() {
                 <SelectItem value="high">$20+/hr</SelectItem>
               </SelectContent>
             </Select>
-            <Select>
+            <Select value={companyFilter} onValueChange={setCompanyFilter}>
               <SelectTrigger className="w-full md:w-48">
                 <SelectValue placeholder="Company" />
               </SelectTrigger>
@@ -140,6 +204,9 @@ export default function AIJobs() {
                 <SelectItem value="appen">Appen</SelectItem>
               </SelectContent>
             </Select>
+            <Button type="button" className="w-full md:w-auto shrink-0" onClick={applyFilters}>
+              Search
+            </Button>
           </div>
 
           {/* Job Listings */}
@@ -151,6 +218,10 @@ export default function AIJobs() {
              <div className="text-center py-12 text-muted-foreground">
                No AI jobs found. Add some from the Admin Panel.
              </div>
+          ) : filteredJobs.length === 0 ? (
+             <div className="text-center py-12 text-muted-foreground">
+               No jobs match your search or filters. Try different keywords or reset filters.
+             </div>
           ) : (
              <motion.div 
                className="grid grid-cols-1 gap-6"
@@ -160,7 +231,7 @@ export default function AIJobs() {
                  visible: { transition: { staggerChildren: 0.1 } }
                }}
              >
-               {jobs.map((job) => (
+               {filteredJobs.map((job) => (
               <motion.div 
                 key={job.id}
                 variants={{
@@ -174,7 +245,7 @@ export default function AIJobs() {
                       <div className="flex items-center gap-4">
                         <div className="w-14 h-14 rounded-lg bg-primary/10 flex items-center justify-center">
                           <span className="font-bold text-primary text-lg">
-                            {job.company[0]}
+                            {(job.company || "?")[0]}
                           </span>
                         </div>
                         <div>
@@ -210,17 +281,12 @@ export default function AIJobs() {
                       <p className="text-sm text-muted-foreground">{job.requirements}</p>
                     </div>
 
-                    <div className="flex gap-3">
-                      <a href={job.apply_link || "#"} target="_blank" rel="noopener noreferrer" className="block">
-                        <Button className="bg-primary hover:bg-primary/90 w-full">
-                          Apply Now
-                          <ExternalLink className="w-4 h-4 ml-2" />
-                        </Button>
-                      </a>
-                      <Button variant="outline">
-                        View Guide
+                    <a href={job.apply_link || "#"} target="_blank" rel="noopener noreferrer" className="block">
+                      <Button className="bg-primary hover:bg-primary/90 w-full">
+                        Apply Now
+                        <ExternalLink className="w-4 h-4 ml-2" />
                       </Button>
-                    </div>
+                    </a>
                   </CardContent>
                 </Card>
               </motion.div>

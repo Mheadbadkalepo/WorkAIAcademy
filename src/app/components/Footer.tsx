@@ -40,6 +40,11 @@ export default function Footer() {
                   Pricing
                 </Link>
               </li>
+              <li>
+                <Link to="/consultation" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Consultation
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -82,7 +87,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-border mt-8 pt-8 text-center text-sm text-muted-foreground">
-          <p>© 2026 WorkAI Academy. All rights reserved.</p>
+          <p>© 2026 Work AI Academy</p>
         </div>
       </div>
     </footer>

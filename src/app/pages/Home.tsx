@@ -10,17 +10,17 @@ import { motion } from "motion/react";
 const testimonials = [
   {
     id: 1,
-    name: "Michael Chen",
+    name: "Michael Wanjala",
     role: "Data Annotator at Outlier AI",
-    initials: "MC",
+    initials: "MW",
     text: "WorkAI Academy helped me land my first AI training job. The application guides are comprehensive and helped me avoid common pitfalls.",
     color: "primary"
   },
   {
     id: 2,
-    name: "Sarah Jenkins",
+    name: "Acquiller Jenkins",
     role: "AI Trainer at Scale AI",
-    initials: "SJ",
+    initials: "AJ",
     text: "Amazing platform! I got accepted into Scale AI within a week of following the premium guides. The interview prep was spot on.",
     color: "secondary"
   },

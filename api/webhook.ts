@@ -149,6 +149,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (product === "platform") unlockPayload.platform_unlocked = true;
     if (product === "low_guides") unlockPayload.low_guides_unlocked = true;
     if (product === "high_guides") unlockPayload.high_guides_unlocked = true;
+    if (product === "consultation_20min") unlockPayload.consult_20_paid = true;
+    if (product === "consultation_30min") unlockPayload.consult_30_paid = true;
+    if (product === "consultation_60min") unlockPayload.consult_60_paid = true;
 
     const { error: accessError } = await supabase
       .from("user_access")
