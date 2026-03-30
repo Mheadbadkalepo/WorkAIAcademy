@@ -149,6 +149,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       {
         payment_reference: orderData.order_tracking_id,
         user_id: metadata.user_id,
+        payment_method: "pesapal",
         product,
         amount: parsedAmount,
         currency: "USD",
