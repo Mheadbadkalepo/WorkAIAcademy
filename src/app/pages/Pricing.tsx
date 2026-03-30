@@ -59,11 +59,11 @@ export default function Pricing() {
                     <span>Basic resources</span>
                   </div>
                 </div>
-                <a href="https://paystack.shop/pay/r2d6a4fmb1" target="_blank" rel="noopener noreferrer" className="block w-full">
+                <Link to="/checkout?product=platform&amount=1" className="block w-full">
                   <Button className="w-full bg-primary hover:bg-primary/90">
                     Unlock Platform
                   </Button>
-                </a>
+                </Link>
               </CardContent>
             </Card>
 
@@ -102,11 +102,11 @@ export default function Pricing() {
                     <span>Basic remote work tips</span>
                   </div>
                 </div>
-                <a href="https://paystack.shop/pay/0i3uddyszm" target="_blank" rel="noopener noreferrer" className="block w-full">
+                <Link to="/checkout?product=low_guides&amount=2" className="block w-full">
                   <Button className="w-full bg-primary hover:bg-primary/90">
                     Unlock Guides
                   </Button>
-                </a>
+                </Link>
               </CardContent>
             </Card>
 
@@ -142,11 +142,11 @@ export default function Pricing() {
                     <span>Premium job guides</span>
                   </div>
                 </div>
-                <a href="https://paystack.shop/pay/efowzo7m02" target="_blank" rel="noopener noreferrer" className="block w-full">
+                <Link to="/checkout?product=high_guides&amount=5" className="block w-full">
                   <Button className="w-full bg-secondary hover:bg-secondary/90">
                     Unlock Premium
                   </Button>
-                </a>
+                </Link>
               </CardContent>
             </Card>
           </div>
@@ -174,7 +174,7 @@ export default function Pricing() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">
-                    We accept M-Pesa STK Push, Paystack, and card payments for your convenience.
+                    We accept all major payment methods including Mobile Money and Cards securely via PesaPal.
                   </p>
                 </CardContent>
               </Card>

@@ -27,6 +27,14 @@ export default function Dashboard() {
   const [loadingStats, setLoadingStats] = useState(true);
 
   useEffect(() => {
+    // If we're inside the PesaPal iframe payment modal and successful
+    if (window.self !== window.top && window.location.search.includes("payment=complete")) {
+      window.parent.postMessage({ type: "PESAPAL_PAYMENT_COMPLETE" }, "*");
+      return;
+    }
+  }, []);
+
+  useEffect(() => {
     const fetchStats = async () => {
       if (!user) {
         setLoadingStats(false);
@@ -79,12 +87,17 @@ export default function Dashboard() {
           finalGuidesCount = guidesUnlockedCount || 0;
         }
 
-        // Fetch user stats (e.g. success rate)
-        const { data: userStats } = await supabase
+        // Fetch user stats (e.g. success rate). Use maybeSingle so we don't throw
+        // when the row hasn't been created yet.
+        const { data: userStats, error: userStatsError } = await supabase
           .from("user_stats")
           .select("success_rate")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
+
+        if (userStatsError) {
+          console.warn("Failed to fetch user stats:", userStatsError.message);
+        }
 
         // Fetch recent activities
         const { data: recentActivities } = await supabase
@@ -205,38 +218,38 @@ export default function Dashboard() {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <Card>
-              <CardHeader className="pb-3">
+            <Card className="flex flex-col h-full">
+              <CardHeader className="pb-3 flex-1">
                 <CardDescription>Active Jobs</CardDescription>
                 <CardTitle className="text-3xl">
                   {loadingStats ? "-" : stats.activeJobs}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="mt-auto pt-0">
                 <Badge className="bg-primary/10 text-primary border-0">+{stats.newJobs} new</Badge>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="pb-3">
+            <Card className="flex flex-col h-full">
+              <CardHeader className="pb-3 flex-1">
                 <CardDescription>Applications</CardDescription>
                 <CardTitle className="text-3xl">
                   {loadingStats ? "-" : stats.applications}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="mt-auto pt-0">
                 <Badge className="bg-secondary/10 text-secondary border-0">In progress</Badge>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="pb-3">
+            <Card className="flex flex-col h-full">
+              <CardHeader className="pb-3 flex-1">
                 <CardDescription>Guides Unlocked</CardDescription>
                 <CardTitle className="text-3xl">
                   {loadingStats ? "-" : stats.guidesUnlocked}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="mt-auto pt-0">
                 {stats.guidesUnlocked > 0 || isUnlocked ? (
                   <Badge className="bg-primary/10 text-primary border-0">All Access</Badge>
                 ) : (
@@ -245,14 +258,14 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="pb-3">
+            <Card className="flex flex-col h-full">
+              <CardHeader className="pb-3 flex-1">
                 <CardDescription>Success Rate</CardDescription>
                 <CardTitle className="text-3xl">
                    {loadingStats ? "-" : `${stats.successRate}%`}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="mt-auto pt-0">
                 <Badge className="bg-accent/10 text-accent-foreground border-0">
                   {stats.successRate >= 80 ? 'Excellent' : 'Good'}
                 </Badge>
@@ -333,11 +346,11 @@ export default function Dashboard() {
                         </Button>
                       </Link>
                     ) : (
-                      <a href="https://paystack.shop/pay/0i3uddyszm" target="_blank" rel="noopener noreferrer" className="block w-full">
+                      <Link to="/checkout?product=low_guides&amount=2" className="block w-full">
                         <Button className="w-full bg-primary hover:bg-primary/90" size="sm">
                           Unlock Now
                         </Button>
-                      </a>
+                      </Link>
                     )}
                   </div>
 
@@ -356,11 +369,11 @@ export default function Dashboard() {
                         </Button>
                       </Link>
                     ) : (
-                      <a href="https://paystack.shop/pay/efowzo7m02" target="_blank" rel="noopener noreferrer" className="block w-full">
+                      <Link to="/checkout?product=high_guides&amount=5" className="block w-full">
                         <Button className="w-full bg-secondary hover:bg-secondary/90" size="sm">
                           Unlock Now
                         </Button>
-                      </a>
+                      </Link>
                     )}
                   </div>
                 </div>

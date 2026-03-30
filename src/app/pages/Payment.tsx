@@ -7,182 +7,65 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group";
-import { Smartphone, CreditCard, Wallet, Loader2, CheckCircle2 } from "lucide-react";
+import { Smartphone, CreditCard, Loader2, CheckCircle2, ShieldCheck } from "lucide-react";
 import { useUnlock } from "../contexts/UnlockContext";
 import { useAuth } from "../contexts/AuthContext";
-import confetti from "canvas-confetti";
-import { usePaystackPayment } from "react-paystack";
-import { supabase } from "../../lib/supabase";
+import PaymentModal from "../components/PaymentModal";
 
 export default function Payment() {
-  const [paymentMethod, setPaymentMethod] = useState("card"); // default to custom card UI
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("card");
   const [email, setEmail] = useState("");
-  const [cardNumber, setCardNumber] = useState("");
-  const [expiry, setExpiry] = useState("");
-  const [cvv, setCvv] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [processing, setProcessing] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
+
   const { setUnlocked, refreshUnlocks } = useUnlock();
   const { user } = useAuth();
 
-  const recordSuccessfulPayment = async (reference: string, method: string) => {
-    if (!user) return;
+  // URL flag to show success (handled by pesapal callback)
+  const isSuccess = window.location.search.includes("success=true") || window.location.search.includes("payment=complete");
 
-    const accessPayload = {
-      user_id: user.id,
-      platform_unlocked: true,
-      updated_at: new Date().toISOString(),
-    };
-
-    const { error: accessError } = await supabase
-      .from("user_access")
-      .upsert(accessPayload, { onConflict: "user_id" });
-
-    if (accessError) {
-      console.error("Failed to persist access state:", accessError.message);
+  const handlePayment = async () => {
+    if (!email) {
+      setError("Please provide an email address");
+      return;
     }
 
-    const { error: paymentError } = await supabase
-      .from("payment_records")
-      .insert({
-        user_id: user.id,
-        payment_reference: reference,
-        payment_method: method,
-        product: "platform",
-        amount: 1.0,
-        currency: "USD",
-        status: "success",
+    setProcessing(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/pesapal-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: 1.00,
+          product: "platform",
+          email: email || user?.email,
+          phone: phoneNumber || user?.user_metadata?.phone || "",
+          description: "Unlock WorkAI Academy Platform",
+          metadata: { user_id: user?.id || null }
+        })
       });
 
-    if (paymentError) {
-      console.error("Failed to save payment record:", paymentError.message);
-    }
+      const data = await response.json();
 
-    await refreshUnlocks();
-  };
-
-  const paystackConfig = {
-    reference: (new Date()).getTime().toString(),
-    email: email || user?.email || "",
-    amount: 100, // 100 cents = $1.00 Paystack parses amount in subunits. Note: Depending on the country, USD amount=100 might mean 100 cents. If it's Kobo it means 1 Naira.
-    currency: "USD",
-    publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
-    metadata: {
-      user_id: user?.id || null,
-      product: "platform",
-    },
-  };
-
-  const initializePayment = usePaystackPayment(paystackConfig);
-
-  const onSuccess = async (reference: any) => {
-    setProcessing(true);
-    try {
-      const res = await fetch(`/api/verify?reference=${reference.reference}`);
-      const data = await res.json();
-      
-      if (data.data && data.data.status === 'success') {
-        await recordSuccessfulPayment(reference.reference, "paystack");
+      if (data.redirect_url) {
+        setPaymentUrl(data.redirect_url);
         setProcessing(false);
-        setSuccess(true);
-        setUnlocked(true);
-        confetti({
-          particleCount: 150,
-          spread: 100,
-          origin: { y: 0.6 }
-        });
       } else {
-        alert("Payment verification failed.");
+        setError(data.error || "Failed to initialize secure checkout");
         setProcessing(false);
       }
-    } catch(err) {
+    } catch (err) {
       console.error(err);
-      alert("Error verifying payment");
+      setError("Error communicating with payment gateway.");
       setProcessing(false);
     }
   };
 
-  const onClose = () => {
-    // User closed the modal
-  };
-
-  const handlePayment = () => {
-    if (paymentMethod === "paystack") {
-      if (!email) {
-        alert("Please provide an email address");
-        return;
-      }
-      initializePayment({ onSuccess, onClose });
-    } else if (paymentMethod === "card") {
-      if (!email || !cardNumber || !expiry || !cvv) {
-        alert("Please fill in all card details and email address");
-        return;
-      }
-
-      const [month, year] = expiry.split('/');
-      if (!month || !year || month.length !== 2 || year.length !== 2) {
-         alert("Invalid expiry format. Use MM/YY");
-         return;
-      }
-
-      setProcessing(true);
-      fetch('/api/charge', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          amount: "100", // Paystack expects lowest denomination (cents)
-          metadata: {
-            user_id: user?.id || null,
-            product: "platform",
-          },
-          card: {
-            number: cardNumber.replace(/\s/g, ''),
-            cvv: cvv,
-            expiry_month: month,
-            expiry_year: "20" + year
-          }
-        })
-      }).then(res => res.json())
-        .then(async (data) => {
-          if (data.data?.status === 'success' || data.status === true) {
-             await recordSuccessfulPayment(data.data?.reference || `card-${Date.now()}`, "card");
-             setProcessing(false);
-             setSuccess(true);
-             setUnlocked(true);
-             confetti({
-               particleCount: 150,
-               spread: 100,
-               origin: { y: 0.6 }
-             });
-          } else {
-             alert("Card charge failed: " + (data.message || data.data?.message || JSON.stringify(data)));
-             setProcessing(false);
-          }
-        })
-        .catch(err => {
-           console.error(err);
-           alert("Error processing card over our secure network.");
-           setProcessing(false);
-        });
-    } else {
-      setProcessing(true);
-      setTimeout(() => {
-        void recordSuccessfulPayment(`mpesa-${Date.now()}`, "mpesa");
-        setProcessing(false);
-        setSuccess(true);
-        setUnlocked(true);
-        confetti({
-          particleCount: 150,
-          spread: 100,
-          origin: { y: 0.6 }
-        });
-      }, 3000);
-    }
-  };
-
-  if (success) {
+  if (isSuccess) {
     return (
       <div className="min-h-screen">
         <Navbar />
@@ -218,11 +101,11 @@ export default function Payment() {
                     Appen, Remotask & Clickworker
                   </CardDescription>
                   <p className="text-3xl font-bold text-primary mb-4">$2</p>
-                  <a href="https://paystack.shop/pay/0i3uddyszm" target="_blank" rel="noopener noreferrer" className="block">
+                  <Link to="/checkout?product=low_guides&amount=2" className="block">
                     <Button className="w-full bg-primary hover:bg-primary/90">
                       Unlock Low Guides
                     </Button>
-                  </a>
+                  </Link>
                 </CardContent>
               </Card>
 
@@ -236,11 +119,11 @@ export default function Payment() {
                     Outlier, Telus & Scale AI
                   </CardDescription>
                   <p className="text-3xl font-bold text-secondary mb-4">$5</p>
-                  <a href="https://paystack.shop/pay/efowzo7m02" target="_blank" rel="noopener noreferrer" className="block">
+                  <Link to="/checkout?product=high_guides&amount=5" className="block">
                     <Button className="w-full bg-secondary hover:bg-secondary/90">
                       Unlock High Guides
                     </Button>
-                  </a>
+                  </Link>
                 </CardContent>
               </Card>
             </div>
@@ -253,30 +136,16 @@ export default function Payment() {
 
   if (processing) {
     return (
-      <div className="min-h-screen">
-        <Navbar />
-        <div className="py-20 px-4">
-          <div className="max-w-md mx-auto text-center">
-            <Card>
-              <CardContent className="pt-12 pb-8">
-                <Loader2 className="w-16 h-16 animate-spin text-primary mx-auto mb-6" />
-                <h2 className="text-2xl font-bold mb-3">Processing Payment...</h2>
-                <p className="text-muted-foreground">
-                  {paymentMethod === "mpesa" && "Please check your phone for the M-Pesa prompt"}
-                  {paymentMethod === "paystack" && "Processing your payment via Paystack"}
-                  {paymentMethod === "card" && "Processing your card payment"}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-        <Footer />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background/50 backdrop-blur-sm fixed inset-0 z-50">
+        <Loader2 className="w-16 h-16 animate-spin text-primary mb-6" />
+        <h2 className="text-2xl font-bold mb-3">Connecting to PesaPal...</h2>
+        <p className="text-muted-foreground">Please wait while we prepare your secure checkout</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       <Navbar />
 
       <section className="py-20 px-4">
@@ -284,32 +153,33 @@ export default function Payment() {
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold mb-4">Unlock WorkAI Academy</h1>
             <p className="text-xl text-muted-foreground">
-              Choose your payment method
+              Choose your payment method securely via PesaPal
             </p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Order Summary */}
             <div className="lg:col-span-1">
-              <Card className="sticky top-24">
+              <Card className="sticky top-24 border-2 border-primary/10">
                 <CardHeader>
                   <CardTitle>Order Summary</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <span>Platform Access</span>
-                      <span className="font-bold">$1.00</span>
+                      <span className="text-muted-foreground">Platform Access</span>
+                      <span className="font-bold text-foreground">$1.00</span>
                     </div>
                     <div className="border-t border-border pt-4">
                       <div className="flex items-center justify-between text-lg">
                         <span className="font-semibold">Total</span>
-                        <span className="font-bold text-2xl">$1.00</span>
+                        <span className="font-bold text-2xl text-primary">$1.00</span>
                       </div>
                     </div>
-                    <div className="bg-accent/10 rounded-lg p-4 mt-4">
-                      <p className="text-sm text-muted-foreground">
-                        One-time payment. Lifetime access to the platform.
+                    <div className="bg-primary/5 rounded-lg p-4 mt-4 flex gap-3 items-start">
+                      <ShieldCheck className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                      <p className="text-sm text-foreground/80 leading-relaxed">
+                        One-time payment for lifetime access to the academy platform.
                       </p>
                     </div>
                   </div>
@@ -317,157 +187,84 @@ export default function Payment() {
               </Card>
             </div>
 
-            {/* Payment Methods */}
+            {/* Payment Flow */}
             <div className="lg:col-span-2">
-              <Card>
+              <Card className="border-2 shadow-sm">
                 <CardHeader>
-                  <CardTitle>Payment Method</CardTitle>
-                  <CardDescription>Select your preferred payment option</CardDescription>
+                  <CardTitle className="flex items-center gap-2">
+                    Payment details
+                  </CardTitle>
+                  <CardDescription>We support Cards and Mobile Money across Africa</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
-                    <div className="space-y-4">
-                      <div className={`flex items-center space-x-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                        paymentMethod === "mpesa" ? "border-primary bg-primary/5" : "border-border"
-                      }`}>
-                        <RadioGroupItem value="mpesa" id="mpesa" />
-                        <Label htmlFor="mpesa" className="flex items-center gap-3 cursor-pointer flex-1">
-                          <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
-                            <Smartphone className="w-5 h-5 text-accent-foreground" />
-                          </div>
-                          <div>
-                            <p className="font-semibold">M-Pesa STK Push</p>
-                            <p className="text-sm text-muted-foreground">Pay with your mobile money</p>
-                          </div>
-                        </Label>
-                      </div>
-
-                      <div className={`flex items-center space-x-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                        paymentMethod === "paystack" ? "border-primary bg-primary/5" : "border-border"
-                      }`}>
-                        <RadioGroupItem value="paystack" id="paystack" />
-                        <Label htmlFor="paystack" className="flex items-center gap-3 cursor-pointer flex-1">
-                          <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center">
-                            <Wallet className="w-5 h-5 text-secondary" />
-                          </div>
-                          <div>
-                            <p className="font-semibold">Paystack</p>
-                            <p className="text-sm text-muted-foreground">Secure payment via Paystack</p>
-                          </div>
-                        </Label>
-                      </div>
-
-                      <div className={`flex items-center space-x-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                        paymentMethod === "card" ? "border-primary bg-primary/5" : "border-border"
-                      }`}>
-                        <RadioGroupItem value="card" id="card" />
-                        <Label htmlFor="card" className="flex items-center gap-3 cursor-pointer flex-1">
-                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <CreditCard className="w-5 h-5 text-primary" />
-                          </div>
-                          <div>
-                            <p className="font-semibold">Credit/Debit Card</p>
-                            <p className="text-sm text-muted-foreground">Pay with your card</p>
-                          </div>
-                        </Label>
-                      </div>
+                  {error && (
+                    <div className="mb-6 p-4 bg-destructive/10 text-destructive rounded-lg text-sm font-medium">
+                      {error}
                     </div>
-                  </RadioGroup>
+                  )}
 
-                  {/* Payment Details */}
-                  <div className="mt-8 space-y-4">
-                    {paymentMethod === "mpesa" && (
-                      <div className="space-y-4">
-                        <div>
-                          <Label htmlFor="phone">Phone Number</Label>
-                          <Input
-                            id="phone"
-                            placeholder="0712345678"
-                            value={phoneNumber}
-                            onChange={(e) => setPhoneNumber(e.target.value)}
-                            className="mt-2"
-                          />
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          You will receive an M-Pesa prompt on your phone
-                        </p>
-                      </div>
-                    )}
+                  <div className="space-y-6">
+                    <div className="grid gap-2">
+                      <Label htmlFor="email" className="text-base">Email Address</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="your@email.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="h-12"
+                      />
+                    </div>
 
-                    {paymentMethod === "paystack" && (
-                      <div className="space-y-4">
-                        <div>
-                          <Label htmlFor="email">Email Address</Label>
-                          <Input
-                            id="email"
-                            type="email"
-                            placeholder="your@email.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="mt-2"
-                          />
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          You will be securely redirected to Paystack to complete your payment
-                        </p>
-                      </div>
-                    )}
+                    <div className="grid gap-2">
+                      <Label htmlFor="phone" className="text-base">Phone Number (Optional)</Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        placeholder="e.g +254 700 000 000"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        className="h-12"
+                      />
+                    </div>
 
-                    {paymentMethod === "card" && (
-                      <div className="space-y-4">
-                        <div>
-                          <Label htmlFor="email-card">Email Address</Label>
-                          <Input 
-                            id="email-card" 
-                            type="email" 
-                            placeholder="your@email.com" 
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="mt-2" 
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="cardNumber">Card Number</Label>
-                          <Input 
-                            id="cardNumber" 
-                            placeholder="1234 5678 9012 3456" 
-                            value={cardNumber}
-                            onChange={(e) => setCardNumber(e.target.value)}
-                            className="mt-2" 
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <Label htmlFor="expiry">Expiry Date</Label>
-                            <Input 
-                              id="expiry" 
-                              placeholder="MM/YY" 
-                              value={expiry}
-                              onChange={(e) => setExpiry(e.target.value)}
-                              className="mt-2" 
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="cvv">CVV</Label>
-                            <Input 
-                              id="cvv" 
-                              placeholder="123" 
-                              value={cvv}
-                              onChange={(e) => setCvv(e.target.value)}
-                              className="mt-2" 
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                    <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="pt-4 grid sm:grid-cols-2 gap-4">
+                      <Label
+                        htmlFor="card"
+                        className={`flex flex-col items-center justify-between rounded-xl border-2 p-4 cursor-pointer hover:bg-accent/5 hover:border-primary/50 ${paymentMethod === "card" ? "border-primary bg-primary/5" : "border-muted"
+                          }`}
+                      >
+                        <RadioGroupItem value="card" id="card" className="sr-only" />
+                        <CreditCard className="mb-3 h-8 w-8 text-primary" />
+                        <span className="font-medium">Credit/Debit Card</span>
+                        <span className="text-xs text-muted-foreground mt-1 text-center">Visa & Mastercard</span>
+                      </Label>
 
-                    <Button
-                      className="w-full bg-primary hover:bg-primary/90"
-                      size="lg"
-                      onClick={handlePayment}
-                    >
-                      Pay $1 and Unlock
-                    </Button>
+                      <Label
+                        htmlFor="mpesa"
+                        className={`flex flex-col items-center justify-between rounded-xl border-2 p-4 cursor-pointer hover:bg-accent/5 hover:border-primary/50 ${paymentMethod === "mpesa" ? "border-primary bg-primary/5" : "border-muted"
+                          }`}
+                      >
+                        <RadioGroupItem value="mpesa" id="mpesa" className="sr-only" />
+                        <Smartphone className="mb-3 h-8 w-8 text-primary" />
+                        <span className="font-medium">Mobile Money</span>
+                        <span className="text-xs text-muted-foreground mt-1 text-center">M-Pesa, Airtel, MTN</span>
+                      </Label>
+                    </RadioGroup>
+
+                    <div className="pt-6">
+                      <Button
+                        className="w-full text-lg h-14 bg-primary hover:bg-primary/90 shadow-md"
+                        onClick={handlePayment}
+                        disabled={processing}
+                      >
+                        {processing ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : "Proceed to Secure Checkout"}
+                      </Button>
+                      <p className="text-center text-xs text-muted-foreground mt-4 flex items-center justify-center gap-1.5">
+                        <ShieldCheck className="w-4 h-4" />
+                        Payments processed securely by PesaPal
+                      </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -476,6 +273,10 @@ export default function Payment() {
         </div>
       </section>
 
+      <PaymentModal
+        url={paymentUrl}
+        onClose={() => setPaymentUrl(null)}
+      />
       <Footer />
     </div>
   );

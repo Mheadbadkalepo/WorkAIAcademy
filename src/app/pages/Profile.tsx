@@ -11,20 +11,13 @@ import { Badge } from "../components/ui/badge";
 import { Loader2, BookOpen, User, Lock, CheckCircle2, Settings } from "lucide-react";
 import { Link } from "react-router";
 
-const ALL_GUIDES = [
-  { title: "Appen Account Guide", path: "appen", tier: "low" },
-  { title: "Outlier Account Guide", path: "outlier", tier: "high" },
-  { title: "Remotask Account Guide", path: "remotask", tier: "low" },
-  { title: "Telus Guide", path: "telus", tier: "high" },
-  { title: "Scale AI Guide", path: "scaleai", tier: "high" },
-  { title: "Clickworker Guide", path: "clickworker", tier: "low" },
-];
 
 export default function Profile() {
   const { user, isAdmin } = useAuth();
   const { isUnlocked } = useUnlock();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
+  const [guides, setGuides] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -38,14 +31,21 @@ export default function Profile() {
         .select("*")
         .eq("id", user.id)
         .single();
+        
+      const { data: guidesData } = await supabase
+        .from("guides")
+        .select("*")
+        .order("id");
+        
       setProfile(data);
+      if (guidesData) setGuides(guidesData);
       setLoading(false);
     };
     fetchProfile();
   }, [user, navigate]);
 
-  const unlockedCount = isUnlocked || isAdmin ? ALL_GUIDES.length : 0;
-  const progressPercent = Math.round((unlockedCount / ALL_GUIDES.length) * 100);
+  const unlockedCount = isUnlocked || isAdmin ? guides.length : 0;
+  const progressPercent = guides.length > 0 ? Math.round((unlockedCount / guides.length) * 100) : 0;
 
   if (loading) {
     return (
@@ -106,7 +106,7 @@ export default function Profile() {
             <CardContent className="pt-6 pb-6">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium">Guides Unlocked</span>
-                <span className="text-sm font-bold text-primary">{unlockedCount} / {ALL_GUIDES.length}</span>
+                <span className="text-sm font-bold text-primary">{unlockedCount} / {guides.length}</span>
               </div>
               <div className="w-full h-3 rounded-full bg-muted overflow-hidden">
                 <div
@@ -131,7 +131,7 @@ export default function Profile() {
 
           {/* Guide List */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {ALL_GUIDES.map((guide) => {
+            {guides.map((guide) => {
               const isAccessible = isUnlocked || isAdmin;
               return (
                 <Card key={guide.path} className={`border ${isAccessible ? "border-primary/20" : "border-border opacity-60"}`}>

@@ -13,6 +13,7 @@ import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Admin from "./pages/Admin";
+import Checkout from "./pages/Checkout";
 
 import AppenGuide from "./pages/AppenGuide";
 import ClickworkerGuide from "./pages/ClickworkerGuide";
@@ -49,6 +50,7 @@ export const router = createBrowserRouter([
       { path: "register", Component: Register },
       { path: "dashboard", element: createElement(ProtectedRoute, null, createElement(Dashboard)) },
       { path: "admin", element: createElement(ProtectedRoute, null, createElement(Admin)) },
+      { path: "checkout", element: createElement(Checkout) },
       { path: "profile", element: createElement(ProtectedRoute, null, createElement(Profile)) },
       { path: "profile-setup", element: createElement(ProtectedRoute, null, createElement(ProfileSetup)) },
       { path: "*", Component: NotFound },

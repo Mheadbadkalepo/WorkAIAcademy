@@ -3,22 +3,29 @@ import Footer from "../components/Footer";
 import { Link } from "react-router";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import { Lock, BookOpen, CheckCircle2 } from "lucide-react";
+import { Lock, BookOpen, CheckCircle2, Loader2 } from "lucide-react";
 import { useUnlock } from "../contexts/UnlockContext";
 import { useAuth } from "../contexts/AuthContext";
+import { useEffect, useState } from "react";
+import { supabase } from "../../lib/supabase";
 
 export default function Guides() {
   const { isUnlocked, lowGuidesUnlocked, highGuidesUnlocked } = useUnlock();
   const { isAdmin } = useAuth();
   
-  const hardcodedGuides = [
-    { id: 1, title: 'Appen Account Guide', description: 'Master the Appen ecosystem and land high-paying AI annotation tasks.', path: 'appen', lessons: 12, tier: 'low' },
-    { id: 2, title: 'Outlier Account Guide', description: 'Learn how to navigate Outlier completely.', path: 'outlier', lessons: 10, tier: 'high' },
-    { id: 3, title: 'Remotask Account Guide', description: 'Become a top Remotasker.', path: 'remotask', lessons: 8, tier: 'low' },
-    { id: 4, title: 'Telus Guide', description: 'Insights for Telus International rating.', path: 'telus', lessons: 14, tier: 'high' },
-    { id: 5, title: 'Scale AI Guide', description: 'Advanced tasks via Scale AI.', path: 'scaleai', lessons: 9, tier: 'high' },
-    { id: 6, title: 'Clickworker Guide', description: 'Maximize your earnings on Clickworker.', path: 'clickworker', lessons: 7, tier: 'low' }
-  ];
+  const [guides, setGuides] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchGuides = async () => {
+      const { data } = await supabase.from('guides').select('*').order('id');
+      if (data) {
+        setGuides(data);
+      }
+      setLoading(false);
+    };
+    fetchGuides();
+  }, []);
 
   const isLowLocked = (guide: any) => {
     if (isAdmin) return false;
@@ -34,8 +41,16 @@ export default function Guides() {
     return true;
   };
 
-  const lowPayingGuides = hardcodedGuides.filter(g => g.tier === 'low').map(g => ({ ...g, locked: isLowLocked(g) }));
-  const highPayingGuides = hardcodedGuides.filter(g => g.tier === 'high').map(g => ({ ...g, locked: isHighLocked(g) }));
+  const lowPayingGuides = guides.filter(g => g.tier === 'low').map(g => ({ ...g, locked: isLowLocked(g) }));
+  const highPayingGuides = guides.filter(g => g.tier === 'high').map(g => ({ ...g, locked: isHighLocked(g) }));
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-12 h-12 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
@@ -63,9 +78,9 @@ export default function Guides() {
                   <Button className="bg-primary hover:bg-primary/90">Unlock Platform First - $1</Button>
                 </Link>
               ) : !lowGuidesUnlocked ? (
-                <a href="https://paystack.shop/pay/0i3uddyszm" target="_blank" rel="noopener noreferrer">
+                <Link to="/checkout?product=low_guides&amount=2">
                   <Button className="bg-primary hover:bg-primary/90">Unlock Low Guides - $2</Button>
-                </a>
+                </Link>
               ) : null}
             </div>
 
@@ -104,9 +119,9 @@ export default function Guides() {
                             <Button variant="outline" className="w-full text-xs">🔐 Unlock Platform First ($1)</Button>
                           </Link>
                         ) : (
-                          <a href="https://paystack.shop/pay/0i3uddyszm" target="_blank" rel="noopener noreferrer" className="w-full block">
+                          <Link to="/checkout?product=low_guides&amount=2" className="w-full block">
                             <Button variant="outline" className="w-full text-xs">🔓 Unlock Low Guides ($2)</Button>
-                          </a>
+                          </Link>
                         )}
                       </div>
                     ) : (
@@ -135,9 +150,9 @@ export default function Guides() {
                   <Button className="bg-secondary hover:bg-secondary/90">Unlock Platform First - $1</Button>
                 </Link>
               ) : !highGuidesUnlocked ? (
-                <a href="https://paystack.shop/pay/efowzo7m02" target="_blank" rel="noopener noreferrer">
+                <Link to="/checkout?product=high_guides&amount=5">
                   <Button className="bg-secondary hover:bg-secondary/90">Unlock High Guides - $5</Button>
-                </a>
+                </Link>
               ) : null}
             </div>
 
@@ -176,9 +191,9 @@ export default function Guides() {
                             <Button variant="outline" className="w-full text-xs">🔐 Unlock Platform First ($1)</Button>
                           </Link>
                         ) : (
-                          <a href="https://paystack.shop/pay/efowzo7m02" target="_blank" rel="noopener noreferrer" className="w-full block">
+                          <Link to="/checkout?product=high_guides&amount=5" className="w-full block">
                             <Button variant="outline" className="w-full text-xs">🔓 Unlock High Guides ($5)</Button>
-                          </a>
+                          </Link>
                         )}
                       </div>
                     ) : (
@@ -205,16 +220,16 @@ export default function Guides() {
                   Our guides include application tips, interview preparation, task walkthroughs, and proven strategies to help you get hired faster and earn more.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <a href="https://paystack.shop/pay/0i3uddyszm" target="_blank" rel="noopener noreferrer">
+                  <Link to="/checkout?product=low_guides&amount=2">
                     <Button size="lg" className="bg-primary hover:bg-primary/90">
                       Get Low Paying Guides - $2
                     </Button>
-                  </a>
-                  <a href="https://paystack.shop/pay/efowzo7m02" target="_blank" rel="noopener noreferrer">
+                  </Link>
+                  <Link to="/checkout?product=high_guides&amount=5">
                     <Button size="lg" className="bg-secondary hover:bg-secondary/90">
                       Get High Paying Guides - $5
                     </Button>
-                  </a>
+                  </Link>
                 </div>
               </div>
             </CardContent>

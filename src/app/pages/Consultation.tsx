@@ -5,12 +5,11 @@ import Footer from "../components/Footer";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
-import { Clock, Loader2, Lock, Mail, Video } from "lucide-react";
+import { Clock, Loader2, Lock, Mail, Video, ShieldCheck } from "lucide-react";
 import { motion } from "motion/react";
-import { usePaystackPayment } from "react-paystack";
 import { useAuth } from "../contexts/AuthContext";
 import { useUnlock } from "../contexts/UnlockContext";
-import { supabase } from "../../lib/supabase";
+import PaymentModal from "../components/PaymentModal";
 
 declare global {
   interface Window {
@@ -22,19 +21,6 @@ declare global {
 
 const CALENDLY_SCRIPT_SRC = "https://assets.calendly.com/assets/external/widget.js";
 const CALENDLY_CSS_HREF = "https://assets.calendly.com/assets/external/widget.css";
-
-/** KES per 1 USD — set `VITE_USD_TO_KES` in `.env` to match your Paystack settlement rate. */
-const USD_TO_KES_RATE =
-  Number.parseFloat(String(import.meta.env.VITE_USD_TO_KES || "")) || 130;
-
-function usdToKesShillings(usd: number): number {
-  return Math.max(1, Math.round(usd * USD_TO_KES_RATE));
-}
-
-/** Paystack expects KES in the smallest unit (cents): whole shillings × 100. */
-function usdToPaystackKesAmount(usd: number): number {
-  return usdToKesShillings(usd) * 100;
-}
 
 type ConsultProduct = "consultation_20min" | "consultation_30min" | "consultation_60min";
 
@@ -94,15 +80,9 @@ function packageIsPaid(pkg: ConsultPackage, consult20: boolean, consult30: boole
 
 export default function Consultation() {
   const { user } = useAuth();
-  const { refreshUnlocks, consult20Paid, consult30Paid, consult60Paid } = useUnlock();
+  const { consult20Paid, consult30Paid, consult60Paid } = useUnlock();
   const [processingId, setProcessingId] = useState<string | null>(null);
-
-  const initializeConsultPayment = usePaystackPayment({
-    publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "",
-    email: user?.email || "",
-    amount: 10000,
-    currency: "KES",
-  });
+  const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
 
   useEffect(() => {
     let link = document.getElementById("calendly-widget-css") as HTMLLinkElement | null;
@@ -124,95 +104,42 @@ export default function Consultation() {
     }
   }, []);
 
-  const recordConsultationPayment = async (
-    reference: string,
-    method: string,
-    pkg: ConsultPackage,
-  ) => {
-    if (!user) return;
-
-    const accessPayload: Record<string, string | boolean> = {
-      user_id: user.id,
-      updated_at: new Date().toISOString(),
-    };
-    if (pkg.product === "consultation_20min") accessPayload.consult_20_paid = true;
-    if (pkg.product === "consultation_30min") accessPayload.consult_30_paid = true;
-    if (pkg.product === "consultation_60min") accessPayload.consult_60_paid = true;
-
-    const { error: accessError } = await supabase.from("user_access").upsert(accessPayload, { onConflict: "user_id" });
-    if (accessError) {
-      console.error("Failed to persist consultation access:", accessError.message);
-    }
-
-    const { error: paymentError } = await supabase.from("payment_records").upsert(
-      {
-        user_id: user.id,
-        payment_reference: reference,
-        payment_method: method,
-        product: pkg.product,
-        amount: usdToKesShillings(pkg.amountUsd),
-        currency: "KES",
-        status: "success",
-      },
-      { onConflict: "payment_reference" },
-    );
-    if (paymentError) {
-      console.error("Failed to save consultation payment:", paymentError.message);
-    }
-
-    await refreshUnlocks();
-  };
-
-  const handlePaystackSuccess = async (pkg: ConsultPackage, paystackResponse: { reference: string }) => {
-    setProcessingId(pkg.id);
-    try {
-      const res = await fetch(`/api/verify?reference=${encodeURIComponent(paystackResponse.reference)}`);
-      const data = await res.json();
-      if (data.data && data.data.status === "success") {
-        await recordConsultationPayment(paystackResponse.reference, "paystack", pkg);
-      } else {
-        alert("Payment verification failed. If you were charged, contact support with your reference.");
-      }
-    } catch (e) {
-      console.error(e);
-      alert("Error verifying payment.");
-    } finally {
-      setProcessingId(null);
-    }
-  };
-
-  const startConsultationPayment = (pkg: ConsultPackage) => {
+  const startConsultationPayment = async (pkg: ConsultPackage) => {
     if (!user?.email) {
       alert("Please sign in with an email address to pay.");
       return;
     }
-    if (!import.meta.env.VITE_PAYSTACK_PUBLIC_KEY) {
-      alert("Payment is not configured. Please try again later.");
-      return;
-    }
 
-    const reference = `consult_${pkg.product}_${Date.now()}_${user.id.slice(0, 8)}`;
+    setProcessingId(pkg.id);
 
-    initializeConsultPayment({
-      config: {
-        email: user.email,
-        amount: usdToPaystackKesAmount(pkg.amountUsd),
-        reference,
-        currency: "KES",
-        metadata: {
-          user_id: user.id,
+    try {
+      const response = await fetch('/api/pesapal-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: pkg.amountUsd,
           product: pkg.product,
-          amount_usd: pkg.amountUsd,
-          amount_kes: usdToKesShillings(pkg.amountUsd),
-        },
-      },
-      onSuccess: (response: { reference?: string } | string) => {
-        const ref =
-          typeof response === "string" ? response : response?.reference;
-        if (ref) void handlePaystackSuccess(pkg, { reference: ref });
-      },
-      onClose: () => {},
-    });
+          email: user.email,
+          phone: user.user_metadata?.phone || "",
+          description: `WorkAI Academy Consultation - ${pkg.title}`,
+          metadata: { user_id: user.id }
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.redirect_url) {
+        setPaymentUrl(data.redirect_url);
+        setProcessingId(null);
+      } else {
+        alert(data.error || "Failed to initialize secure checkout");
+        setProcessingId(null);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error communicating with payment gateway.");
+      setProcessingId(null);
+    }
   };
 
   const openCalendlyPopup = useCallback((url: string) => {
@@ -264,8 +191,7 @@ export default function Consultation() {
             Book a 1-on-1 Consultation
           </h2>
           <p className="text-muted-foreground text-base sm:text-lg mb-4">
-            Checkout is in <strong className="text-foreground font-semibold">Kenyan Shillings (KES)</strong> via
-            Paystack (priced from USD at the rate in settings). After payment, pick a time in Calendly.
+            Secure checkout via PesaPal. After payment, pick a time in Calendly.
           </p>
           {!user && (
             <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
@@ -308,10 +234,7 @@ export default function Consultation() {
                       <CardTitle className="text-xl sm:text-2xl leading-tight">{pkg.title}</CardTitle>
                       <div className="text-right shrink-0">
                         <span className="text-2xl sm:text-3xl font-bold text-primary tabular-nums block">
-                          Ksh {usdToKesShillings(pkg.amountUsd).toLocaleString()}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          ≈ ${pkg.amountUsd} USD @ {USD_TO_KES_RATE} KES/USD
+                          ${pkg.amountUsd} USD
                         </span>
                       </div>
                     </div>
@@ -365,13 +288,13 @@ export default function Consultation() {
                             ? "bg-primary hover:bg-primary/90 shadow-md"
                             : "bg-secondary text-secondary-foreground hover:bg-secondary/90"
                         }`}
-                        disabled={busy}
+                        disabled={busy || processingId !== null}
                         onClick={() => startConsultationPayment(pkg)}
                       >
                         {busy ? (
                           <>
                             <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                            Verifying…
+                            Connecting...
                           </>
                         ) : (
                           "Book Consultation"
@@ -384,9 +307,9 @@ export default function Consultation() {
                       </p>
                     )}
                     {user && !paid && (
-                      <p className="text-xs text-center text-muted-foreground">
-                        After Paystack confirms, we save your access in your account so only you can schedule this
-                        tier.
+                      <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1.5 mt-2">
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        Secure processing by PesaPal
                       </p>
                     )}
                   </CardContent>
@@ -413,6 +336,11 @@ export default function Consultation() {
         </section>
       </main>
 
+      <PaymentModal 
+        url={paymentUrl} 
+        onClose={() => setPaymentUrl(null)} 
+        onSuccess={() => window.location.reload()}
+      />
       <Footer />
     </div>
   );

@@ -69,11 +69,11 @@ export default function RemoteJobs() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <a href="https://paystack.shop/pay/r2d6a4fmb1" target="_blank" rel="noopener noreferrer" className="block w-full">
+                    <Link to="/checkout?product=platform&amount=1" className="block w-full">
                       <Button className="w-full bg-secondary hover:bg-secondary/90" size="lg">
                         Unlock for $1
                       </Button>
-                    </a>
+                    </Link>
                   </CardContent>
                 </Card>
               </div>
