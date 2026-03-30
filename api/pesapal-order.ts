@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient } from "@supabase/supabase-js";
-import { getPesapalToken, getPesapalBaseUrl } from "./_pesapal";
+import { getPesapalToken, getPesapalBaseUrl } from "./_pesapal.js";
 
 const PRODUCT_PRICES: Record<string, number> = {
   platform: 1.0,
