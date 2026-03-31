@@ -54,6 +54,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const token = await getPesapalToken();
 
+    // Convert USD in frontend to KSH for PesaPal (expecting local currency)
+    const exchangeRate = Number(process.env.PESAPAL_EXCHANGE_RATE || "140"); // default 140 KSH per USD
+    const amountInKsh = Math.round(parsedAmount * exchangeRate);
+
     // Use environment variable for host when provided, fallback to Vercel host, then request host.
     const appUrl = normalizeAppUrl(process.env.VITE_APP_URL, process.env.VERCEL_URL, req.headers.host);
     const callbackUrl = `${appUrl}/dashboard?payment=complete`;
@@ -99,9 +103,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const orderPayload = {
       id: orderId,
-      currency: "USD",
-      amount: parsedAmount,
-      description: description || `Payment for ${product}`,
+      currency: "KES",
+      amount: amountInKsh,
+      description: `${description || `Payment for ${product}`} (USD ${parsedAmount} -> KES ${amountInKsh})`,
       callback_url: callbackUrl,
       notification_id: ipn_id,
       billing_address: {
