@@ -166,8 +166,8 @@ export default function Privacy() {
               </p>
               <div className="space-y-2 text-muted-foreground">
                 <p><strong>Email:</strong> privacy@workaiacademy.org</p>
-                <p><strong>Phone:</strong> +254 XXX XXX XXX</p>
-                <p><strong>Address:</strong> Nairobi, Kenya</p>
+                <p><strong>Phone:</strong> +1 (773) 658-4625</p>
+                <p><strong>Address:</strong>  Chicago, Illinois, USA</p>
               </div>
             </CardContent>
           </Card>

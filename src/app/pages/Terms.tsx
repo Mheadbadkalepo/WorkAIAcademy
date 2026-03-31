@@ -239,24 +239,7 @@ export default function Terms() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Mail className="h-5 w-5" />
-                Contact Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">
-                If you have any questions about these Terms and Conditions, please contact us:
-              </p>
-              <div className="space-y-2 text-muted-foreground">
-                <p><strong>Email:</strong> legal@workaiacademy.org</p>
-                <p><strong>Phone:</strong> +254 XXX XXX XXX</p>
-                <p><strong>Address:</strong> Nairobi, Kenya</p>
-              </div>
-            </CardContent>
-          </Card>
+         
 
           <div className="text-center mt-8">
             <Link to="/">
