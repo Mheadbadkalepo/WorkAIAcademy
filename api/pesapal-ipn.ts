@@ -73,7 +73,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const userId = record.user_id;
     const product = record.product;
-    const expectedAmount = PRODUCT_PRICES[product as keyof typeof PRODUCT_PRICES];
+    const expectedAmount = record.amount; // Use stored amount instead of PRODUCT_PRICES
+    const expectedCurrency = record.currency || "USD";
 
     if (!userId || !product || !expectedAmount) {
       console.error("Invalid payment record payload", record);
@@ -86,8 +87,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const paidAmount = Number(txStatus.amount);
-    if (!Number.isFinite(paidAmount) || Math.abs(paidAmount - expectedAmount) > 0.0001) {
-      console.error("Payment amount mismatch", { orderTrackingId: OrderTrackingId, paidAmount, expectedAmount, product });
+    const paidCurrency = txStatus.currency || "KES"; // PesaPal often returns KES
+
+    // Allow some tolerance for currency conversion (5% difference)
+    const tolerance = expectedAmount * 0.05;
+    const amountMatches = Math.abs(paidAmount - expectedAmount) <= tolerance;
+
+    if (!Number.isFinite(paidAmount) || !amountMatches) {
+      console.error("Payment amount mismatch", {
+        orderTrackingId: OrderTrackingId,
+        paidAmount,
+        paidCurrency,
+        expectedAmount,
+        expectedCurrency,
+        product
+      });
       await supabase
         .from("payment_records")
         .upsert(
@@ -95,8 +109,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             user_id: userId,
             payment_reference: OrderTrackingId,
             product,
-            amount: paidAmount || record.amount,
-            currency: txStatus.currency || "USD",
+            amount: paidAmount,
+            currency: paidCurrency,
             status: "failed",
           },
           { onConflict: "payment_reference" },
@@ -111,8 +125,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         payment_reference: OrderTrackingId,
         payment_method: txStatus.payment_method || "pesapal",
         product,
-        amount: txStatus.amount,
-        currency: txStatus.currency,
+        amount: paidAmount,
+        currency: paidCurrency,
         status: "success",
       },
       { onConflict: "payment_reference" }
