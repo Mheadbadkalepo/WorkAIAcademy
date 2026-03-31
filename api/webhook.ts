@@ -5,9 +5,9 @@ const PRODUCT_PRICES: Record<string, number> = {
   platform: 1.0,
   low_guides: 2.0,
   high_guides: 5.0,
-  consultation_20min: 20.0,
-  consultation_30min: 30.0,
-  consultation_60min: 60.0,
+  consultation_20min: 5.0,
+  consultation_30min: 8.0,
+  consultation_60min: 10.0,
 };
 
 function getSupabaseAdminClient() {
@@ -64,9 +64,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       if (amountUSD === 2.0) product = "low_guides";
       else if (amountUSD === 5.0) product = "high_guides";
-      else if (amountUSD === 20.0) product = "consultation_20min";
-      else if (amountUSD === 30.0) product = "consultation_30min";
-      else if (amountUSD === 60.0) product = "consultation_60min";
+      else if (amountUSD === 5.0) product = "consultation_20min";
+      else if (amountUSD === 8.0) product = "consultation_30min";
+      else if (amountUSD === 10.0) product = "consultation_60min";
 
       // Insert/update payment record
       const { error: paymentError } = await supabase.from("payment_records").upsert(

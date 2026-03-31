@@ -6,9 +6,9 @@ const PRODUCT_PRICES: Record<string, number> = {
   platform: 1.0,
   low_guides: 2.0,
   high_guides: 5.0,
-  consultation_20min: 20.0,
-  consultation_30min: 30.0,
-  consultation_60min: 60.0,
+  consultation_20min: 5.0,
+  consultation_30min: 8.0,
+  consultation_60min: 10.0,
 };
 
 function isValidEmail(value: unknown): value is string {
