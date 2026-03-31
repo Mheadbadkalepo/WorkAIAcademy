@@ -26,6 +26,8 @@ import ProfileSetup from "./pages/ProfileSetup";
 
 import GuideDetail from "./pages/GuideDetail";
 import Consultation from "./pages/Consultation";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 
 export const router = createBrowserRouter([
   {
@@ -53,6 +55,8 @@ export const router = createBrowserRouter([
       { path: "checkout", element: createElement(Checkout) },
       { path: "profile", element: createElement(ProtectedRoute, null, createElement(Profile)) },
       { path: "profile-setup", element: createElement(ProtectedRoute, null, createElement(ProfileSetup)) },
+      { path: "privacy", Component: Privacy },
+      { path: "terms", Component: Terms },
       { path: "*", Component: NotFound },
     ],
   },
