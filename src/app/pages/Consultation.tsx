@@ -64,7 +64,7 @@ const PACKAGES: ConsultPackage[] = [
     title: "1 Hour Call",
     amountUsd: 10,
     duration: "1 hour",
-    description: "Full private consultation session",
+    description: "ATS-friendly CV writing & complete job application strategy",
     scheduleLabel: "Schedule 1 hour",
     calendlyUrl: "https://calendly.com/workaiacademyofficial/1-hour-meeting",
     product: "consultation_60min",
@@ -188,11 +188,15 @@ export default function Consultation() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
         <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">
-            Book a 1-on-1 Consultation
+            Book Expert Consultation Sessions
           </h2>
           <p className="text-muted-foreground text-base sm:text-lg mb-4">
+            Get personalized guidance to boost your job application success. Our experts will help you create ATS-friendly CVs and master the application process.
+          </p>
+          <p className="text-muted-foreground text-base sm:text-lg">
             Secure checkout via PesaPal. After payment, pick a time in Calendly.
           </p>
+        </div>
           {!user && (
             <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
               <Lock className="w-4 h-4" />
@@ -319,7 +323,49 @@ export default function Consultation() {
           })}
         </div>
 
-        <section className="mt-16 sm:mt-20 rounded-2xl border border-border bg-muted/30 p-8 sm:p-10 text-center max-w-3xl mx-auto">
+        {/* Why Book a Consultation */}
+        <section className="mt-16 sm:mt-20 max-w-4xl mx-auto mb-12">
+          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-10">Why Book a Consultation?</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="border-border hover:border-primary/50 transition-colors">
+              <CardHeader>
+                <CardTitle className="text-lg">✍️ ATS-Optimized CVs</CardTitle>
+              </CardHeader>
+              <CardContent className="text-muted-foreground text-sm">
+                Learn to format your CV to pass Applicant Tracking Systems. Our experts guide you through keyword optimization, structure, and formatting that wins.
+              </CardContent>
+            </Card>
+            <Card className="border-border hover:border-primary/50 transition-colors">
+              <CardHeader>
+                <CardTitle className="text-lg">🎯 Application Strategy</CardTitle>
+              </CardHeader>
+              <CardContent className="text-muted-foreground text-sm">
+                Get a personalized roadmap for applying to remote jobs and AI platforms. Learn what recruiters look for and how to stand out.
+              </CardContent>
+            </Card>
+            <Card className="border-border hover:border-primary/50 transition-colors">
+              <CardHeader>
+                <CardTitle className="text-lg">🚀 Faster Results</CardTitle>
+              </CardHeader>
+              <CardContent className="text-muted-foreground text-sm">
+                Avoid common mistakes that cost you opportunities. Our consultants provide real-time feedback and proven tactics to land jobs faster.
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
+        {/* Call-to-Action Banner */}
+        <section className="mt-16 sm:mt-20 rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border border-primary/20 p-8 sm:p-12 text-center max-w-4xl mx-auto mb-12">
+          <h3 className="text-2xl font-bold mb-3">Ready to Accelerate Your Job Search?</h3>
+          <p className="text-muted-foreground text-lg mb-4 max-w-2xl mx-auto">
+            <strong>Book the 1-hour consultation</strong> for a complete ATS CV audit and personalized job application strategy. Every minute counts when applying for competitive opportunities.
+          </p>
+          <p className="text-muted-foreground text-base">
+            Don't leave your success to chance—get expert guidance to boost your acceptance rates.
+          </p>
+        </section>
+
+        <section className="mt-12 rounded-2xl border border-border bg-muted/30 p-8 sm:p-10 text-center max-w-3xl mx-auto">
           <h3 className="text-lg font-semibold mb-2 flex items-center justify-center gap-2">
             <Mail className="w-5 h-5 text-primary" />
             Questions before booking?
