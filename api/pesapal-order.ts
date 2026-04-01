@@ -152,7 +152,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { error: paymentRecordError } = await supabase.from("payment_records").upsert(
       {
         payment_reference: orderData.order_tracking_id,
+        merchant_reference: orderData.merchant_reference || orderId,
         user_id: metadata.user_id,
+        payer_email: email,
         payment_method: "pesapal",
         product,
         amount: parsedAmount,

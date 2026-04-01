@@ -1,20 +1,27 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
+import { useUnlock } from "../contexts/UnlockContext";
 import Navbar from "../components/Navbar";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import Footer from "../components/Footer";
 import { Loader2 } from "lucide-react";
 import PaymentModal from "../components/PaymentModal";
+import PaymentSuccessModal from "../components/PaymentSuccessModal";
 
 export default function Checkout() {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  const { refreshUnlocks } = useUnlock();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [cancelled, setCancelled] = useState(false);
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
+  const [orderTrackingId, setOrderTrackingId] = useState<string | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successReferenceCode, setSuccessReferenceCode] = useState<string>("");
+  const [productUnlocked, setProductUnlocked] = useState<string>("");
 
   const product = searchParams.get("product");
   const amountStr = searchParams.get("amount");
@@ -63,6 +70,7 @@ export default function Checkout() {
         const data = await response.json();
         
         if (data.redirect_url) {
+          setOrderTrackingId(data.order_tracking_id);
           setPaymentUrl(data.redirect_url);
         } else {
           setError(data.error || "Failed to initialize secure checkout");
@@ -129,10 +137,38 @@ export default function Checkout() {
       </div>
       <PaymentModal 
         url={paymentUrl} 
+        referenceCode={orderTrackingId || ""}
         onClose={() => {
           setPaymentUrl(null);
           setCancelled(true);
-        }} 
+        }}
+        onSuccess={async () => {
+          if (orderTrackingId) {
+            setSuccessReferenceCode(orderTrackingId);
+            setProductUnlocked(product || "");
+            
+            // Wait a moment for the webhook to process, then refresh unlocks
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            await refreshUnlocks();
+            
+            setShowSuccessModal(true);
+          }
+        }}
+      />
+      <PaymentSuccessModal
+        isOpen={showSuccessModal}
+        referenceCode={successReferenceCode}
+        productUnlocked={productUnlocked}
+        onClose={() => {
+          setShowSuccessModal(false);
+          setPaymentUrl(null);
+          navigate("/dashboard");
+        }}
+        onContinue={() => {
+          setShowSuccessModal(false);
+          setPaymentUrl(null);
+          navigate("/dashboard");
+        }}
       />
       <Footer />
     </div>

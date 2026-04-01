@@ -30,3 +30,67 @@ ON public.user_stats
 FOR UPDATE 
 USING (auth.uid() = user_id)
 WITH CHECK (auth.uid() = user_id);
+
+-- Extra tracking fields for PesaPal reconciliation/reporting by email
+ALTER TABLE public.payment_records
+ADD COLUMN IF NOT EXISTS payer_email TEXT,
+ADD COLUMN IF NOT EXISTS merchant_reference TEXT,
+ADD COLUMN IF NOT EXISTS provider_transaction_code TEXT;
+
+CREATE INDEX IF NOT EXISTS idx_payment_records_payer_email
+ON public.payment_records (payer_email);
+
+-- Query payments by user email with key references and method
+CREATE OR REPLACE VIEW public.v_payment_records_by_email AS
+SELECT
+  pr.id,
+  pr.user_id,
+  COALESCE(pr.payer_email, p.email) AS email,
+  pr.payment_reference,
+  pr.merchant_reference,
+  pr.provider_transaction_code,
+  pr.payment_method,
+  pr.product,
+  pr.amount,
+  pr.currency,
+  pr.status,
+  pr.created_at,
+  pr.updated_at
+FROM public.payment_records pr
+LEFT JOIN public.profiles p ON p.id = pr.user_id;
+
+CREATE OR REPLACE FUNCTION public.get_payment_records_by_email(p_email TEXT)
+RETURNS TABLE (
+  user_id UUID,
+  email TEXT,
+  payment_reference TEXT,
+  merchant_reference TEXT,
+  provider_transaction_code TEXT,
+  payment_method TEXT,
+  product TEXT,
+  amount NUMERIC,
+  currency TEXT,
+  status TEXT,
+  created_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ
+)
+LANGUAGE sql
+SECURITY DEFINER
+AS $$
+  SELECT
+    v.user_id,
+    v.email,
+    v.payment_reference,
+    v.merchant_reference,
+    v.provider_transaction_code,
+    v.payment_method,
+    v.product,
+    v.amount,
+    v.currency,
+    v.status,
+    v.created_at,
+    v.updated_at
+  FROM public.v_payment_records_by_email v
+  WHERE LOWER(v.email) = LOWER(p_email)
+  ORDER BY v.created_at DESC;
+$$;

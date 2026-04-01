@@ -4,11 +4,12 @@ import { Lock, X, Loader2 } from "lucide-react";
 
 interface PaymentModalProps {
   url: string | null;
+  referenceCode?: string;
   onClose: () => void;
   onSuccess?: () => void;
 }
 
-export default function PaymentModal({ url, onClose, onSuccess }: PaymentModalProps) {
+export default function PaymentModal({ url, referenceCode, onClose, onSuccess }: PaymentModalProps) {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {

@@ -59,12 +59,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const supabase = getSupabaseAdminClient();
 
-    // Find the pending payment record and get user_id & product
-    const { data: record, error: fetchError } = await supabase
+    // Find pending payment by tracking id. Fallback to merchant reference if needed.
+    let { data: record, error: fetchError } = await supabase
       .from("payment_records")
-      .select("user_id, product, amount, status")
+      .select("user_id, product, amount, currency, status, payer_email, merchant_reference")
       .eq("payment_reference", OrderTrackingId)
       .maybeSingle();
+
+    if ((!record || fetchError) && OrderMerchantReference) {
+      const fallback = await supabase
+        .from("payment_records")
+        .select("user_id, product, amount, currency, status, payer_email, merchant_reference")
+        .eq("merchant_reference", String(OrderMerchantReference))
+        .maybeSingle();
+      record = fallback.data ?? null;
+      fetchError = fallback.error ?? null;
+    }
 
     if (fetchError || !record) {
       console.error("Failed to find payment record:", fetchError);
@@ -88,6 +98,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const paidAmount = Number(txStatus.amount);
     const paidCurrency = txStatus.currency || "KES"; // PesaPal often returns KES
+    const providerCode =
+      txStatus.confirmation_code || txStatus.payment_account || txStatus.transaction_code || null;
+    const payerEmail =
+      txStatus.email || txStatus.billing_address?.email_address || record.payer_email || null;
 
     // Allow some tolerance for currency conversion (5% difference)
     const tolerance = expectedAmount * 0.05;
@@ -108,6 +122,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           {
             user_id: userId,
             payment_reference: OrderTrackingId,
+            merchant_reference: String(OrderMerchantReference || record.merchant_reference || ""),
+            provider_transaction_code: providerCode,
+            payer_email: payerEmail,
             product,
             amount: paidAmount,
             currency: paidCurrency,
@@ -123,6 +140,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       {
         user_id: userId,
         payment_reference: OrderTrackingId,
+        merchant_reference: String(OrderMerchantReference || record.merchant_reference || ""),
+        provider_transaction_code: providerCode,
+        payer_email: payerEmail,
         payment_method: txStatus.payment_method || "pesapal",
         product,
         amount: paidAmount,

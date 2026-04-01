@@ -34,7 +34,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Fetch all pending payments
     const { data: pendingPayments, error: fetchError } = await supabase
       .from("payment_records")
-      .select("payment_reference, user_id, product, amount")
+      .select("payment_reference, user_id, product, amount, merchant_reference, payer_email")
       .eq("status", "pending");
 
     if (fetchError) {
@@ -62,9 +62,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           txStatus.payment_status_description?.toLowerCase() === "completed"
         ) {
           // Update payment record to success
+          const providerCode =
+            txStatus.confirmation_code || txStatus.payment_account || txStatus.transaction_code || null;
+          const payerEmail =
+            txStatus.email || txStatus.billing_address?.email_address || payment.payer_email || null;
+
           const { error: updateError } = await supabase
             .from("payment_records")
-            .update({ status: "success", payment_method: txStatus.payment_method || "pesapal" })
+            .update({
+              status: "success",
+              payment_method: txStatus.payment_method || "pesapal",
+              amount: Number(txStatus.amount) || payment.amount,
+              currency: txStatus.currency || "KES",
+              merchant_reference: txStatus.merchant_reference || payment.merchant_reference || null,
+              provider_transaction_code: providerCode,
+              payer_email: payerEmail,
+            })
             .eq("payment_reference", payment.payment_reference);
 
           if (updateError) {
