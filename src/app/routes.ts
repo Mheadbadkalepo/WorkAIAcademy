@@ -21,6 +21,7 @@ import OutlierGuide from "./pages/OutlierGuide";
 import RemotaskGuide from "./pages/RemotaskGuide";
 import ScaleAIGuide from "./pages/ScaleAIGuide";
 import TelusGuide from "./pages/TelusGuide";
+import BabelAudioGuide from "./pages/BabelAudioGuide";
 import Profile from "./pages/Profile";
 import ProfileSetup from "./pages/ProfileSetup";
 
@@ -46,6 +47,7 @@ export const router = createBrowserRouter([
       { path: "guides/remotask", Component: RemotaskGuide },
       { path: "guides/scaleai", Component: ScaleAIGuide },
       { path: "guides/telus", Component: TelusGuide },
+      { path: "guides/babel-audio", Component: BabelAudioGuide },
       { path: "guides/:slug", Component: GuideDetail },
       { path: "payment", Component: Payment },
       { path: "login", Component: Login },
