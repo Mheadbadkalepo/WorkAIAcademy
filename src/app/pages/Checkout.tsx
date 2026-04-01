@@ -143,16 +143,40 @@ export default function Checkout() {
           setCancelled(true);
         }}
         onSuccess={async () => {
-          if (orderTrackingId) {
-            setSuccessReferenceCode(orderTrackingId);
-            setProductUnlocked(product || "");
-            
-            // Wait a moment for the webhook to process, then refresh unlocks
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            await refreshUnlocks();
-            
-            setShowSuccessModal(true);
+          if (!orderTrackingId) return;
+
+          setSuccessReferenceCode(orderTrackingId);
+          setProductUnlocked(product || "");
+
+          // Poll payment status endpoint until success or timeout
+          const verifyPaymentStatus = async () => {
+            const maxRetries = 12;
+            const intervalMs = 2000;
+            for (let attempt = 0; attempt < maxRetries; attempt++) {
+              try {
+                const response = await fetch(`/api/payment-status?order_tracking_id=${orderTrackingId}`);
+                if (response.ok) {
+                  const data = await response.json();
+                  if (data.payment?.status === 'success') {
+                    return true;
+                  }
+                }
+              } catch (err) {
+                console.error('Payment status check error', err);
+              }
+              await new Promise((resolve) => setTimeout(resolve, intervalMs));
+            }
+            return false;
+          };
+
+          const isVerified = await verifyPaymentStatus();
+          if (!isVerified) {
+            setError('Payment still pending; please try again shortly.');
+            return;
           }
+
+          await refreshUnlocks();
+          setShowSuccessModal(true);
         }}
       />
       <PaymentSuccessModal

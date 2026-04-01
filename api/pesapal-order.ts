@@ -3,12 +3,12 @@ import { createClient } from "@supabase/supabase-js";
 import { getPesapalToken, getPesapalBaseUrl } from "./_pesapal.js";
 
 const PRODUCT_PRICES: Record<string, number> = {
-  platform: 1.0,
-  low_guides: 2.0,
-  high_guides: 5.0,
-  consultation_20min: 5.0,
-  consultation_30min: 8.0,
-  consultation_60min: 10.0,
+  platform: 1.0,        // USD: 1.00 -> KES: 140.00
+  low_guides: 2.0,      // USD: 2.00 -> KES: 280.00  
+  high_guides: 5.0,     // USD: 5.00 -> KES: 700.00
+  consultation_20min: 5.0,  // USD: 5.00 -> KES: 700.00
+  consultation_30min: 8.0,  // USD: 8.00 -> KES: 1120.00
+  consultation_60min: 10.0, // USD: 10.00 -> KES: 1400.00
 };
 
 function isValidEmail(value: unknown): value is string {
@@ -52,14 +52,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: "Missing authenticated user metadata" });
     }
 
+    if (!process.env.PESAPAL_CONSUMER_KEY || !process.env.PESAPAL_CONSUMER_SECRET) {
+      console.error("Missing PesaPal credentials (PESAPAL_CONSUMER_KEY/PESAPAL_CONSUMER_SECRET)");
+      return res.status(500).json({ error: "Payment gateway configuration error" });
+    }
+
+    if (!process.env.PESAPAL_APP_URL) {
+      console.error("Missing PESAPAL_APP_URL environment variable");
+      return res.status(500).json({ error: "Payment gateway configuration error" });
+    }
+
     const token = await getPesapalToken();
 
     // Convert USD in frontend to KSH for PesaPal (expecting local currency)
     const exchangeRate = Number(process.env.PESAPAL_EXCHANGE_RATE || "140"); // default 140 KSH per USD
     const amountInKsh = Math.round(parsedAmount * exchangeRate);
 
-    // Use environment variable for host when provided, fallback to Vercel host, then request host.
-    const appUrl = normalizeAppUrl(process.env.VITE_APP_URL, process.env.VERCEL_URL, req.headers.host);
+    // Use explicit production URL from environment variable (hardcoded to avoid wrong host resolution)
+    const appUrl = process.env.PESAPAL_APP_URL;
+    if (!appUrl) {
+      throw new Error("Missing PESAPAL_APP_URL environment variable");
+    }
     const callbackUrl = `${appUrl}/dashboard?payment=complete`;
     const ipnUrl = `${appUrl}/api/pesapal-ipn`;
 
@@ -149,6 +162,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    // Log order creation for debugging
+    console.log(`[PesaPal Order] Creating payment record for user=${metadata.user_id}, product=${product}, amount_usd=${parsedAmount}, amount_ksh=${amountInKsh}, order_tracking_id=${orderData.order_tracking_id}`);
+    
     const { error: paymentRecordError } = await supabase.from("payment_records").upsert(
       {
         payment_reference: orderData.order_tracking_id,
@@ -157,17 +174,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         payer_email: email,
         payment_method: "pesapal",
         product,
-        amount: parsedAmount,
-        currency: "USD",
+        amount: amountInKsh,
+        currency: "KES",
         status: "pending",
       },
       { onConflict: "payment_reference" },
     );
 
     if (paymentRecordError) {
+      console.error(`[PesaPal Order] DB Error: ${paymentRecordError.message}`);
       throw new Error(`Failed to record pending payment: ${paymentRecordError.message}`);
     }
 
+    console.log(`[PesaPal Order] Successfully created payment record: ${orderData.order_tracking_id}`);
+    
     return res.status(200).json({
       success: true,
       order_tracking_id: orderData.order_tracking_id,

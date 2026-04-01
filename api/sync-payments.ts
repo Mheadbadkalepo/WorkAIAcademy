@@ -3,12 +3,12 @@ import { getPesapalToken, getTransactionStatus } from "./_pesapal.js";
 import { createClient } from "@supabase/supabase-js";
 
 const PRODUCT_PRICES: Record<string, number> = {
-  platform: 1.0,
-  low_guides: 2.0,
-  high_guides: 5.0,
-  consultation_20min: 5.0,
-  consultation_30min: 8.0,
-  consultation_60min: 10.0,
+  platform: 1.0,        // USD: 1.00 -> KES: 140.00
+  low_guides: 2.0,      // USD: 2.00 -> KES: 280.00  
+  high_guides: 5.0,     // USD: 5.00 -> KES: 700.00
+  consultation_20min: 5.0,  // USD: 5.00 -> KES: 700.00
+  consultation_30min: 8.0,  // USD: 8.00 -> KES: 1120.00
+  consultation_60min: 10.0, // USD: 10.00 -> KES: 1400.00
 };
 
 function getSupabaseAdminClient() {
@@ -46,7 +46,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ message: "No pending payments to sync", count: 0 });
     }
 
-    console.log(`Syncing ${pendingPayments.length} pending payments...`);
+    console.log(`[Sync Payments] Starting sync of ${pendingPayments.length} pending payments...`);
 
     const token = await getPesapalToken();
     let successCount = 0;
@@ -54,6 +54,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     for (const payment of pendingPayments) {
       try {
+        console.log(`[Sync Payments] Checking payment ${payment.payment_reference} for user ${payment.user_id}, product ${payment.product}...`);
+        
         const txStatus = await getTransactionStatus(token, payment.payment_reference);
 
         // Check if payment is completed
@@ -66,6 +68,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             txStatus.confirmation_code || txStatus.payment_account || txStatus.transaction_code || null;
           const payerEmail =
             txStatus.email || txStatus.billing_address?.email_address || payment.payer_email || null;
+
+          console.log(`[Sync Payments] Payment ${payment.payment_reference} completed on Pesapal. Updating DB and unlocking ${payment.product}...`);
 
           const { error: updateError } = await supabase
             .from("payment_records")
@@ -81,7 +85,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             .eq("payment_reference", payment.payment_reference);
 
           if (updateError) {
-            console.error(`Failed to update payment ${payment.payment_reference}:`, updateError);
+            console.error(`[Sync Payments] Failed to update payment ${payment.payment_reference}: ${updateError.message}`);
             failCount++;
             continue;
           }
@@ -104,17 +108,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             .upsert(unlockPayload, { onConflict: "user_id" });
 
           if (accessError) {
-            console.error(`Failed to update access for ${payment.user_id}:`, accessError);
+            console.error(`[Sync Payments] Failed to update access for user ${payment.user_id}: ${accessError.message}`);
             failCount++;
           } else {
             console.log(
-              `✓ Synced payment ${payment.payment_reference} for user ${payment.user_id}`
+              `[Sync Payments] ✓ Synced payment ${payment.payment_reference} for user ${payment.user_id}, unlocked ${payment.product}`
             );
             successCount++;
           }
         } else {
           console.log(
-            `Payment ${payment.payment_reference} still pending. Status: ${txStatus.payment_status_description}`
+            `[Sync Payments] Payment ${payment.payment_reference} still pending. Status: ${txStatus.payment_status_description}`
           );
         }
       } catch (error: any) {
