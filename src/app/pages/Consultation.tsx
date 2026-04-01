@@ -324,7 +324,7 @@ export default function Consultation() {
         </div>
 
         {/* Why Book a Consultation */}
-        <section className="mt-16 sm:mt-20 max-w-4xl mx-auto mb-12">
+        <section className="mt-16 sm:mt-20 max-w-4xl mx-auto mb-12 space-y-4">
           <h2 className="text-2xl sm:text-3xl font-bold text-center mb-10">Why Book a Consultation?</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="border-border hover:border-primary/50 transition-colors">
