@@ -208,8 +208,6 @@ export default function Consultation() {
               </span>
             </p>
           )}
-        </div>
-
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-stretch">
           {PACKAGES.map((pkg, index) => {
             const paid = packageIsPaid(pkg, consult20Paid, consult30Paid, consult60Paid);
