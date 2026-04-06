@@ -154,6 +154,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const orderData = await submitResponse.json();
 
+    if (orderData.error) {
+      console.error("[PesaPal Order] API returned an error:", orderData.error);
+      throw new Error(`PesaPal API Error: ${orderData.error.message || JSON.stringify(orderData.error)}`);
+    }
+
+    if (!orderData.order_tracking_id) {
+      console.error("[PesaPal Order] Missing order_tracking_id in response:", orderData);
+      throw new Error(`PesaPal did not return an order tracking ID. Payload: ${JSON.stringify(orderData)}`);
+    }
+
     const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
