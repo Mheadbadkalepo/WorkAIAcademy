@@ -62,6 +62,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ error: "Payment gateway configuration error" });
     }
 
+    console.log("==========================================");
+    console.log("[PesaPal Debug] PESAPAL_ENV:", process.env.PESAPAL_ENV || "production (default)");
+    console.log("[PesaPal Debug] BASE_URL:", getPesapalBaseUrl());
+    console.log("==========================================");
+
     const token = await getPesapalToken();
 
     // Convert USD in frontend to KSH for PesaPal (expecting local currency)
