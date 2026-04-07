@@ -1,7 +1,6 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
+﻿import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient } from "@supabase/supabase-js";
 
-// Previous configuration
 const PRODUCT_PRICES: Record<string, number> = {
   platform: 1.0,
   low_guides: 2.0,
@@ -30,14 +29,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const event = req.body;
 
-    // Verify Paystack webhook signature natively (In production, verify x-paystack-signature header if needed)
+    // Verify Paystack webhook signature
     const secret = process.env.PAYSTACK_SECRET_KEY;
     if (!secret) {
       console.error("Missing PAYSTACK_SECRET_KEY");
       return res.status(500).json({ error: "Server configuration error" });
     }
 
-    // Paystack sends 'charge.success' events
+    // Paystack sends charge.success events
     if (event.event === "charge.success") {
       const { reference, amount, metadata } = event.data;
 
@@ -68,13 +67,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       else if (amountUSD === 20.0) product = "consultation_20min";
       else if (amountUSD === 30.0) product = "consultation_30min";
       else if (amountUSD === 60.0) product = "consultation_60min";
-      else if (metadata?.product) product = metadata.product; // allow explicit override
 
-      // 1. Insert/update payment record
+      // Insert/update payment record
       const { error: paymentError } = await supabase.from("payment_records").upsert(
         {
           payment_reference: reference,
-          merchant_reference: reference,
           user_id: metadata.user_id,
           payment_method: "paystack",
           product,
@@ -90,7 +87,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(500).json({ error: "Database error" });
       }
 
-      // 2. Update user access
+      // Update user access
       const unlockPayload: Record<string, any> = {
         user_id: metadata.user_id,
         updated_at: new Date().toISOString(),

@@ -9,13 +9,13 @@ import { Clock, Loader2, Lock, Mail, Video, ShieldCheck } from "lucide-react";
 import { motion } from "motion/react";
 import { useAuth } from "../contexts/AuthContext";
 import { useUnlock } from "../contexts/UnlockContext";
-import PaymentModal from "../components/PaymentModal";
 
 declare global {
   interface Window {
     Calendly?: {
       initPopupWidget: (options: { url: string }) => void;
     };
+    PaystackPop?: any;
   }
 }
 
@@ -82,7 +82,6 @@ export default function Consultation() {
   const { user } = useAuth();
   const { consult20Paid, consult30Paid, consult60Paid } = useUnlock();
   const [processingId, setProcessingId] = useState<string | null>(null);
-  const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
 
   useEffect(() => {
     let link = document.getElementById("calendly-widget-css") as HTMLLinkElement | null;
@@ -113,31 +112,27 @@ export default function Consultation() {
     setProcessingId(pkg.id);
 
     try {
-      const response = await fetch('/api/pesapal-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amount: pkg.amountUsd,
-          product: pkg.product,
-          email: user.email,
-          phone: user.user_metadata?.phone || "",
-          description: `WorkAI Academy Consultation - ${pkg.title}`,
-          metadata: { user_id: user.id }
-        })
+      const handler = window.PaystackPop.setup({
+        key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
+        email: user.email,
+        amount: pkg.amountUsd * 100, // Cents
+        currency: 'USD',
+        metadata: {
+          user_id: user.id,
+          product: pkg.product
+        },
+        callback: function (response: any) {
+           setProcessingId(null);
+           window.location.reload();
+        },
+        onClose: function () {
+           setProcessingId(null);
+        }
       });
-
-      const data = await response.json();
-
-      if (data.redirect_url) {
-        setPaymentUrl(data.redirect_url);
-        setProcessingId(null);
-      } else {
-        alert(data.error || "Failed to initialize secure checkout");
-        setProcessingId(null);
-      }
+      handler.openIframe();
     } catch (err) {
       console.error(err);
-      alert("Error communicating with payment gateway.");
+      alert("Error initializing payment gateway.");
       setProcessingId(null);
     }
   };
@@ -311,7 +306,7 @@ export default function Consultation() {
                     {user && !paid && (
                       <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1.5 mt-2">
                         <ShieldCheck className="w-3.5 h-3.5" />
-                        Secure processing by PesaPal
+                        Secure processing by Paystack
                       </p>
                     )}
                   </CardContent>
@@ -379,12 +374,6 @@ export default function Consultation() {
           </a>
         </section>
       </main>
-
-      <PaymentModal 
-        url={paymentUrl} 
-        onClose={() => setPaymentUrl(null)} 
-        onSuccess={() => window.location.reload()}
-      />
       <Footer />
     </div>
   );

@@ -1,0 +1,23 @@
+﻿commit 826bf88582b6a3181eea61d19e17b2761b137390
+Author: WorkAIAcademy Dev <dev@workaiacademy.com>
+Date:   Wed Apr 1 18:54:12 2026 +0300
+
+    Fix JSX closing tag error in Consultation.tsx
+    
+    - Fix missing space formatting in section className
+    - Resolve Expected corresponding JSX closing tag for <main> error
+    - Application now builds successfully
+
+diff --git a/src/app/pages/Consultation.tsx b/src/app/pages/Consultation.tsx
+index 7bc07fc..bade266 100644
+--- a/src/app/pages/Consultation.tsx
++++ b/src/app/pages/Consultation.tsx
+@@ -324,7 +324,7 @@ export default function Consultation() {
+         </div>
+ 
+         {/* Why Book a Consultation */}
+-        <section className="mt-16 sm:mt-20 max-w-4xl mx-auto mb-12">
++        <section className="mt-16 sm:mt-20 max-w-4xl mx-auto mb-12 space-y-4">
+           <h2 className="text-2xl sm:text-3xl font-bold text-center mb-10">Why Book a Consultation?</h2>
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+             <Card className="border-border hover:border-primary/50 transition-colors">

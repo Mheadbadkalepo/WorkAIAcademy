@@ -1,0 +1,125 @@
+﻿
+> @figma/my-make-file@0.0.1 build
+> vite build
+
+[36mvite v6.3.5 [32mbuilding for production...[36m[39m
+transforming...
+[32mΓ£ô[39m 23 modules transformed.
+node.exe : [31mΓ£ù[39m 
+Build failed in 544ms
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
+    + CategoryInfo         
+     : NotSpecified: ([3  
+  1mΓ£ù[39m Build faile   
+ d in 544ms:String) [],    
+ RemoteException
+    + FullyQualifiedErrorI 
+   d : NativeCommandError
+ 
+[31merror during build:
+[31m[vite:esbuild] 
+Transform failed with 3 
+errors:
+C:/Users/USER/Downloads/Wor
+kAIAcademy/src/app/pages/Co
+nsultation.tsx:211:10: 
+ERROR: Unexpected closing 
+"div" tag does not match 
+opening "main" tag
+C:/Users/USER/Downloads/Wor
+kAIAcademy/src/app/pages/Co
+nsultation.tsx:383:8: 
+ERROR: Unexpected closing 
+"main" tag does not match 
+opening "div" tag
+C:/Users/USER/Downloads/Wor
+kAIAcademy/src/app/pages/Co
+nsultation.tsx:386:8: 
+ERROR: Expected ")" but 
+found "url"[31m
+file: [36mC:/Users/USER/Do
+wnloads/WorkAIAcademy/src/a
+pp/pages/Consultation.tsx:2
+11:10[31m
+[33m
+[33mUnexpected closing 
+"div" tag does not match 
+opening "main" tag[33m
+209|              </p>
+210|            )}
+211|          </div>
+   |            ^
+212|  
+213|          <div 
+className="grid 
+grid-cols-1 md:grid-cols-3 
+gap-6 lg:gap-8 
+items-stretch">
+
+[33mUnexpected closing 
+"main" tag does not match 
+opening "div" tag[33m
+381|            </a>
+382|          </section>
+383|        </main>
+   |          ^
+384|  
+385|        <PaymentModal 
+
+[33mExpected ")" but 
+found "url"[33m
+384|  
+385|        <PaymentModal 
+386|          
+url={paymentUrl} 
+   |          ^
+387|          onClose={() 
+=> setPaymentUrl(null)} 
+388|          
+onSuccess={() => 
+window.location.reload()}
+[31m
+    at failureErrorWithLog 
+(C:\Users\USER\Downloads\Wo
+rkAIAcademy\node_modules\es
+build\lib\main.js:1467:15)
+    at C:\Users\USER\Downlo
+ads\WorkAIAcademy\node_modu
+les\esbuild\lib\main.js:736
+:50
+    at responseCallbacks.<c
+omputed> (C:\Users\USER\Dow
+nloads\WorkAIAcademy\node_m
+odules\esbuild\lib\main.js:
+603:9)
+    at 
+handleIncomingPacket (C:\Us
+ers\USER\Downloads\WorkAIAc
+ademy\node_modules\esbuild\
+lib\main.js:658:12)
+    at 
+Socket.readFromStdout (C:\U
+sers\USER\Downloads\WorkAIA
+cademy\node_modules\esbuild
+\lib\main.js:581:7)
+    at Socket.emit 
+(node:events:518:28)
+    at addChunk (node:inter
+nal/streams/readable:561:12
+)
+    at readableAddChunkPush
+ByteMode (node:internal/str
+eams/readable:512:3)
+    at Readable.push (node:
+internal/streams/readable:3
+92:5)
+    at Pipe.onStreamRead (n
+ode:internal/stream_base_co
+mmons:189:23)[39m

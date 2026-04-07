@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Link } from "react-router";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -10,12 +10,7 @@ import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group";
 import { Smartphone, CreditCard, Loader2, CheckCircle2, ShieldCheck } from "lucide-react";
 import { useUnlock } from "../contexts/UnlockContext";
 import { useAuth } from "../contexts/AuthContext";
-
-declare global {
-  interface Window {
-    PaystackPop?: any;
-  }
-}
+import PaymentModal from "../components/PaymentModal";
 
 export default function Payment() {
   const [paymentMethod, setPaymentMethod] = useState("card");
@@ -23,45 +18,49 @@ export default function Payment() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
 
   const { setUnlocked, refreshUnlocks } = useUnlock();
   const { user } = useAuth();
 
-  const isSuccess = window.location.search.includes("success=true");
+  // URL flag to show success (handled by pesapal callback)
+  const isSuccess = window.location.search.includes("success=true") || window.location.search.includes("payment=complete");
 
   const handlePayment = async () => {
-    if (!email && !user?.email) {
+    if (!email) {
       setError("Please provide an email address");
       return;
     }
 
     setProcessing(true);
     setError(null);
-    
+
     try {
-      const handler = window.PaystackPop.setup({
-        key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
-        email: email || user?.email,
-        amount: 1.00 * 100, // Paystack requires kobo/cents
-        currency: 'USD',
-        metadata: {
-          user_id: user?.id || null,
-          product: "platform"
-        },
-        callback: function (response: any) {
-           setProcessing(false);
-           refreshUnlocks();
-           window.location.search = '?success=true';
-        },
-        onClose: function () {
-           setProcessing(false);
-           setError('Payment window was closed.');
-        }
+      const response = await fetch('/api/pesapal-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: 1.00,
+          product: "platform",
+          email: email || user?.email,
+          phone: phoneNumber || user?.user_metadata?.phone || "",
+          description: "Unlock WorkAI Academy Platform",
+          metadata: { user_id: user?.id || null }
+        })
       });
-      handler.openIframe();
+
+      const data = await response.json();
+
+      if (data.redirect_url) {
+        setPaymentUrl(data.redirect_url);
+        setProcessing(false);
+      } else {
+        setError(data.error || "Failed to initialize secure checkout");
+        setProcessing(false);
+      }
     } catch (err) {
       console.error(err);
-      setError("Error initializing Paystack gateway.");
+      setError("Error communicating with payment gateway.");
       setProcessing(false);
     }
   };
@@ -95,7 +94,7 @@ export default function Payment() {
               <Card className="border-2 border-primary/20 hover:border-primary/50 transition-colors">
                 <CardContent className="pt-8 pb-6">
                   <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl">📘</span>
+                    <span className="text-2xl">≡ƒôÿ</span>
                   </div>
                   <CardTitle className="mb-2">Low Paying Guides</CardTitle>
                   <CardDescription className="mb-4">
@@ -113,7 +112,7 @@ export default function Payment() {
               <Card className="border-2 border-secondary/20 hover:border-secondary/50 transition-colors">
                 <CardContent className="pt-8 pb-6">
                   <div className="w-14 h-14 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl">📕</span>
+                    <span className="text-2xl">≡ƒôò</span>
                   </div>
                   <CardTitle className="mb-2">High Paying Guides</CardTitle>
                   <CardDescription className="mb-4">
@@ -263,7 +262,7 @@ export default function Payment() {
                       </Button>
                       <p className="text-center text-xs text-muted-foreground mt-4 flex items-center justify-center gap-1.5">
                         <ShieldCheck className="w-4 h-4" />
-                        Payments processed securely by Paystack
+                        Payments processed securely by PesaPal
                       </p>
                     </div>
                   </div>
@@ -273,6 +272,11 @@ export default function Payment() {
           </div>
         </div>
       </section>
+
+      <PaymentModal
+        url={paymentUrl}
+        onClose={() => setPaymentUrl(null)}
+      />
       <Footer />
     </div>
   );
