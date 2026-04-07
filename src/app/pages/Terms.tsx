@@ -90,7 +90,7 @@ export default function Terms() {
                 <h3 className="font-semibold mb-2">Pricing and Payment</h3>
                 <p className="text-muted-foreground">
                   All prices are listed in USD and are subject to change. Payment is processed securely
-                  through PesaPal. You agree to pay all charges associated with your account.
+                  through Paystack. You agree to pay all charges associated with your account.
                 </p>
               </div>
 

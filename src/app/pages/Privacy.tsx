@@ -50,7 +50,7 @@ export default function Privacy() {
               <div>
                 <h3 className="font-semibold mb-2">Payment Information</h3>
                 <p className="text-muted-foreground">
-                  Payment information is processed securely through our payment partners (PesaPal).
+                  Payment information is processed securely through our payment partners (Paystack).
                   We do not store your full payment details on our servers.
                 </p>
               </div>

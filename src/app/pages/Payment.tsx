@@ -139,7 +139,7 @@ export default function Payment() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background/50 backdrop-blur-sm fixed inset-0 z-50">
         <Loader2 className="w-16 h-16 animate-spin text-primary mb-6" />
-        <h2 className="text-2xl font-bold mb-3">Connecting to PesaPal...</h2>
+        <h2 className="text-2xl font-bold mb-3">Connecting to Paystack...</h2>
         <p className="text-muted-foreground">Please wait while we prepare your secure checkout</p>
       </div>
     );
@@ -154,7 +154,7 @@ export default function Payment() {
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold mb-4">Unlock WorkAI Academy</h1>
             <p className="text-xl text-muted-foreground">
-              Choose your payment method securely via PesaPal
+              Choose your payment method securely via Paystack
             </p>
           </div>
 

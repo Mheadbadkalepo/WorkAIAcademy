@@ -189,7 +189,7 @@ export default function Consultation() {
             Get personalized guidance to boost your job application success. Our experts will help you create ATS-friendly CVs and master the application process.
           </p>
           <p className="text-muted-foreground text-base sm:text-lg">
-            Secure checkout via PesaPal. After payment, pick a time in Calendly.
+            Secure checkout via Paystack. After payment, pick a time in Calendly.
           </p>
         </div>
           {!user && (

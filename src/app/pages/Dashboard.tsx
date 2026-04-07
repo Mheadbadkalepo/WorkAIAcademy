@@ -27,14 +27,6 @@ export default function Dashboard() {
   const [loadingStats, setLoadingStats] = useState(true);
 
   useEffect(() => {
-    // If we're inside the PesaPal iframe payment modal and successful
-    if (window.self !== window.top && window.location.search.includes("payment=complete")) {
-      window.parent.postMessage({ type: "PESAPAL_PAYMENT_COMPLETE" }, "*");
-      return;
-    }
-  }, []);
-
-  useEffect(() => {
     const fetchStats = async () => {
       if (!user) {
         setLoadingStats(false);

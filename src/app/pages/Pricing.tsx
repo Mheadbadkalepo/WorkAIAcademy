@@ -174,7 +174,7 @@ export default function Pricing() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">
-                    We accept all major payment methods including Mobile Money and Cards securely via PesaPal.
+                    We accept all major payment methods including Mobile Money and Cards securely via Paystack.
                   </p>
                 </CardContent>
               </Card>
