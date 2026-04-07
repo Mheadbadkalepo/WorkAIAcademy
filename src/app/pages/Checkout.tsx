@@ -52,8 +52,8 @@ export default function Checkout() {
       const handler = window.PaystackPop.setup({
         key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
         email: user.email,
-        amount: amount * 100, // Cents
-        currency: 'USD',
+        amount: Math.round(amount * 140 * 100), // Convert USD to KES, then to cents (Kobo equivalent)
+        currency: 'KES',
         metadata: {
           user_id: user.id,
           product: product

@@ -59,15 +59,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(200).json({ message: "Already processed" });
       }
 
-      // Determine product from amount (in kobo, so divide by 100)
-      const amountUSD = amount / 100;
+      // Determine product from amount (amount is in KES cents, so divide by 100, then by 140 to get USD)
+      const amountUSD = Math.round((amount / 100) / 140);
       let product = "platform"; // default
 
-      if (amountUSD === 2.0) product = "low_guides";
-      else if (amountUSD === 5.0) product = "high_guides";
-      else if (amountUSD === 20.0) product = "consultation_20min";
-      else if (amountUSD === 30.0) product = "consultation_30min";
-      else if (amountUSD === 60.0) product = "consultation_60min";
+      if (amountUSD === 2) product = "low_guides";
+      else if (amountUSD === 5) product = "high_guides";
+      else if (amountUSD === 20) product = "consultation_20min";
+      else if (amountUSD === 30) product = "consultation_30min";
+      else if (amountUSD === 60) product = "consultation_60min";
       else if (metadata?.product) product = metadata.product; // allow explicit override
 
       // 1. Insert/update payment record

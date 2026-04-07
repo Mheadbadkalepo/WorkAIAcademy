@@ -115,8 +115,8 @@ export default function Consultation() {
       const handler = window.PaystackPop.setup({
         key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
         email: user.email,
-        amount: pkg.amountUsd * 100, // Cents
-        currency: 'USD',
+        amount: Math.round(pkg.amountUsd * 140 * 100), // Convert USD to KES, then to cents
+        currency: 'KES',
         metadata: {
           user_id: user.id,
           product: pkg.product
