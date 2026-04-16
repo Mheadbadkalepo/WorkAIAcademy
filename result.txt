@@ -1,0 +1,7 @@
+﻿Checking Live Endpoint...
+LIVE HTTP Status: 200
+LIVE Response: {"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3VzZXJkYXRhIjoiNWFlNzMzMTUtODYwMi00MWUwLThhYzYtZGE4ZjZmZWIyMmRlIiwidWlkIjoicklTZTRDN2RxV1lxUDNmMXExSld0K1hZK1BFL0lMS2QiLCJuYmYiOjE3NzU1NjI0MjYsImV4cCI6MTc3NTU2MjcyNiwiaWF0IjoxNzc1NTYyNDI2LCJpc3MiOiJodHRwOi8vcGF5LnBlc2FwYWwuY29tLyIsImF1ZCI6Imh0dHA6Ly9wYXkucGVzYXBhbC5jb20vIn0.K1dvYePBC0IDNL2pyyvxHlnecjE5wji2DyZU8vKj-kc","expiryDate":"2026-04-07T11:52:06.4266379Z","error":null,"status":"200","message":"Request processed successfully"}
+
+Checking Sandbox Endpoint...
+SANDBOX HTTP Status: 200
+SANDBOX Response: {"error":{"error_type":"api_error","code":"invalid_consumer_key_or_secret_provided","message":""},"status":"500"}

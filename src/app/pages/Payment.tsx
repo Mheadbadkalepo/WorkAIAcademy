@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { Button } from "../components/ui/button";
@@ -25,13 +25,20 @@ export default function Payment() {
   const [error, setError] = useState<string | null>(null);
 
   const { setUnlocked, refreshUnlocks } = useUnlock();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/login?redirect=" + encodeURIComponent(window.location.pathname + window.location.search));
+    }
+  }, [user, loading, navigate]);
 
   const isSuccess = window.location.search.includes("success=true");
 
   const handlePayment = async () => {
-    if (!email && !user?.email) {
-      setError("Please provide an email address");
+    if (!user) {
+      setError("Please log in to continue.");
       return;
     }
 
@@ -41,11 +48,11 @@ export default function Payment() {
     try {
       const handler = window.PaystackPop.setup({
         key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
-        email: email || user?.email,
+        email: user.email,
         amount: Math.round(1.00 * 140 * 100), // Convert USD to KES, then to cents
         currency: 'KES',
         metadata: {
-          user_id: user?.id || null,
+          user_id: user.id,
           product: "platform"
         },
         callback: function (response: any) {
@@ -206,19 +213,7 @@ export default function Payment() {
 
                   <div className="space-y-6">
                     <div className="grid gap-2">
-                      <Label htmlFor="email" className="text-base">Email Address</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="your@email.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="h-12"
-                      />
-                    </div>
-
-                    <div className="grid gap-2">
-                      <Label htmlFor="phone" className="text-base">Phone Number (Optional)</Label>
+                      <Label htmlFor="phone" className="text-base">Phone Number</Label>
                       <Input
                         id="phone"
                         type="tel"
