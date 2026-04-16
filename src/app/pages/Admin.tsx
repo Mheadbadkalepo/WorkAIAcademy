@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { Loader2, Plus, Trash2, BarChart3, Users, DollarSign } from "lucide-react";
 import { Badge } from "../components/ui/badge";
 
 export default function Admin() {
@@ -24,6 +24,10 @@ export default function Admin() {
 
   // Form states
   const [formData, setFormData] = useState<any>({});
+  
+  // Analytics states
+  const [analytics, setAnalytics] = useState<any>(null);
+  const [isFetchingAnalytics, setIsFetchingAnalytics] = useState(false);
 
   useEffect(() => {
     if (!loading && (!user || !isAdmin)) {
@@ -32,6 +36,7 @@ export default function Admin() {
   }, [user, isAdmin, loading, navigate]);
 
   const fetchData = async (tab: string) => {
+    if (tab === "analytics") return;
     setIsFetching(true);
     try {
       const { data: result, error } = await supabase.from(tab).select("*").order("id", { ascending: false });
@@ -47,9 +52,39 @@ export default function Admin() {
     }
   };
 
+  const fetchAnalytics = async () => {
+    setIsFetchingAnalytics(true);
+    try {
+      const { data: payments } = await supabase.from("payment_records").select("amount, currency, product").eq("status", "success");
+      const totalRevenue = payments?.reduce((acc, curr) => {
+        const amount = Number(curr.amount) || 0;
+        const inKes = curr.currency === "USD" ? amount * 140 : amount;
+        return acc + inKes;
+      }, 0) || 0;
+
+      const { count: usersCount } = await supabase.from("user_access").select("*", { count: "exact", head: true }).eq("platform_unlocked", true);
+
+      const { data: recentPayments } = await supabase.from("payment_records").select("*").eq("status", "success").order("created_at", { ascending: false }).limit(5);
+
+      setAnalytics({
+        totalRevenue,
+        usersCount: usersCount || 0,
+        recentPayments: recentPayments || []
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsFetchingAnalytics(false);
+    }
+  };
+
   useEffect(() => {
     if (isAdmin) {
-      fetchData(activeTab);
+      if (activeTab === "analytics") {
+        fetchAnalytics();
+      } else {
+        fetchData(activeTab);
+      }
     }
   }, [activeTab, isAdmin]);
 
@@ -199,7 +234,63 @@ export default function Admin() {
             <TabsTrigger value="ai_jobs">AI Jobs</TabsTrigger>
             <TabsTrigger value="remote_jobs">Remote Jobs</TabsTrigger>
             <TabsTrigger value="guides">Guides</TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center gap-2"><BarChart3 className="w-4 h-4"/> Analytics</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="analytics">
+            {isFetchingAnalytics || !analytics ? (
+              <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+            ) : (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card className="border-2 border-primary/20 bg-primary/5">
+                    <CardContent className="pt-6 flex flex-col items-center text-center">
+                      <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mb-4">
+                        <DollarSign className="w-6 h-6 text-primary" />
+                      </div>
+                      <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Total Revenue</p>
+                      <h2 className="text-4xl font-bold mt-2">KSh {analytics.totalRevenue.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</h2>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="border-2 border-secondary/20 bg-secondary/5">
+                    <CardContent className="pt-6 flex flex-col items-center text-center">
+                      <div className="w-12 h-12 rounded-full bg-secondary/20 flex items-center justify-center mb-4">
+                        <Users className="w-6 h-6 text-secondary" />
+                      </div>
+                      <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Users With Access</p>
+                      <h2 className="text-4xl font-bold mt-2">{analytics.usersCount}</h2>
+                    </CardContent>
+                  </Card>
+                </div>
+                
+                <h3 className="text-xl font-bold mt-8 mb-4 border-b pb-2">Recent Payments</h3>
+                <div className="space-y-4">
+                  {analytics.recentPayments.length === 0 ? (
+                    <p className="text-muted-foreground">No recent successful payments found.</p>
+                  ) : (
+                    analytics.recentPayments.map((payment: any) => (
+                      <Card key={payment.id} className="p-4 flex flex-row justify-between items-center bg-card">
+                        <div>
+                          <p className="font-semibold flex items-center gap-2">
+                            {payment.payment_method?.toUpperCase()} 
+                            <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-200">Success</Badge>
+                          </p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {new Date(payment.created_at).toLocaleString()} • {payment.payment_reference}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-bold text-primary">KSh {payment.currency === 'USD' ? (payment.amount * 140).toLocaleString() : Number(payment.amount).toLocaleString()}</p>
+                          <p className="text-xs font-medium text-muted-foreground capitalize">{payment.product.replace(/_/g, " ")}</p>
+                        </div>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </TabsContent>
 
           <TabsContent value="ai_jobs">
             {renderAIJobForm()}
