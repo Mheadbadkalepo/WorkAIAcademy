@@ -39,11 +39,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Paystack sends 'charge.success' events
     if (event.event === "charge.success") {
-      const { reference, amount, metadata } = event.data;
+      const { reference, amount, metadata: rawMetadata } = event.data;
+
+      // Paystack metadata can sometimes be a JSON string
+      let metadata = rawMetadata;
+      if (typeof rawMetadata === "string" && rawMetadata.length > 0) {
+        try {
+          metadata = JSON.parse(rawMetadata);
+        } catch (e) {
+          console.error("Failed to parse metadata JSON:", rawMetadata);
+        }
+      }
 
       if (!reference || !metadata?.user_id) {
-        console.error("Invalid webhook payload", { reference, metadata });
-        return res.status(400).json({ error: "Invalid payload" });
+        console.error("Invalid webhook payload - missing reference or user_id", { reference, metadata });
+        return res.status(400).json({ error: "Invalid payload: missing user_id in metadata" });
       }
 
       const supabase = getSupabaseAdminClient();
@@ -56,19 +66,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .maybeSingle();
 
       if (existing?.status === "success") {
+        console.log(`Payment ${reference} already processed.`);
         return res.status(200).json({ message: "Already processed" });
       }
 
-      // Determine product from amount (amount is in KES cents, so divide by 100, then by 140 to get USD)
-      const amountUSD = Math.round((amount / 100) / 140);
-      let product = "platform"; // default
+      // Determine product
+      // 1. Check metadata first (source of truth from frontend)
+      // 2. Fallback to amount-based detection
+      let product = metadata.product || "platform";
+      
+      const amountKES = amount / 100; // Paystack sends amount in cents
+      const amountUSD = Math.round(amountKES / 140);
 
-      if (amountUSD === 2) product = "low_guides";
-      else if (amountUSD === 5) product = "high_guides";
-      else if (amountUSD === 20) product = "consultation_20min";
-      else if (amountUSD === 30) product = "consultation_30min";
-      else if (amountUSD === 60) product = "consultation_60min";
-      else if (metadata?.product) product = metadata.product; // allow explicit override
+      if (!metadata.product) {
+        if (amountUSD === 2) product = "low_guides";
+        else if (amountUSD === 5) product = "high_guides";
+        else if (amountUSD >= 20 && amountUSD <= 60) {
+           // Fallback for consultation based on amount if metadata is missing
+           if (amountUSD === 20) product = "consultation_20min";
+           else if (amountUSD === 30) product = "consultation_30min";
+           else if (amountUSD === 60) product = "consultation_60min";
+        }
+      }
+
+      console.log(`Processing payment for product: ${product}, user: ${metadata.user_id}, amount: ${amountUSD} USD`);
 
       // 1. Insert/update payment record
       const { error: paymentError } = await supabase.from("payment_records").upsert(
@@ -86,8 +107,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       );
 
       if (paymentError) {
-        console.error("Payment record error:", paymentError);
-        return res.status(500).json({ error: "Database error" });
+        console.error("Database error saving payment record:", paymentError);
+        return res.status(500).json({ error: "Database error saving payment" });
       }
 
       // 2. Update user access
@@ -97,25 +118,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       };
 
       if (product === "platform") unlockPayload.platform_unlocked = true;
-      if (product === "low_guides") unlockPayload.low_guides_unlocked = true;
-      if (product === "high_guides") unlockPayload.high_guides_unlocked = true;
-      if (product === "consultation_20min") unlockPayload.consult_20_paid = true;
-      if (product === "consultation_30min") unlockPayload.consult_30_paid = true;
-      if (product === "consultation_60min") unlockPayload.consult_60_paid = true;
+      else if (product === "low_guides") unlockPayload.low_guides_unlocked = true;
+      else if (product === "high_guides") unlockPayload.high_guides_unlocked = true;
+      else if (product === "consultation_20min") unlockPayload.consult_20_paid = true;
+      else if (product === "consultation_30min") unlockPayload.consult_30_paid = true;
+      else if (product === "consultation_60min") unlockPayload.consult_60_paid = true;
 
       const { error: accessError } = await supabase
         .from("user_access")
         .upsert(unlockPayload, { onConflict: "user_id" });
 
       if (accessError) {
-        console.error("User access error:", accessError);
-        return res.status(500).json({ error: "Database error" });
+        console.error("Database error updating user access:", accessError);
+        // Note: We don't return 500 here because the payment was already recorded.
+        // We might want to alert the admin instead.
       }
 
-      console.log(`Paystack payment processed: ${reference} for user ${metadata.user_id}`);
+      console.log(`Successfully processed Paystack payment: ${reference} for user ${metadata.user_id}`);
     }
 
     return res.status(200).json({ message: "Webhook processed" });
+
   } catch (error: any) {
     console.error("Webhook error:", error);
     return res.status(500).json({ error: "Internal server error" });
