@@ -135,18 +135,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.log("[Webhook] Payment record saved successfully.");
 
       // 6. Grant Access
-      // Always grant platform access if they buy anything
+      // ONLY grant access to the specific product purchased.
       const unlockPayload: Record<string, any> = {
         user_id: userId,
-        platform_unlocked: true, // Buying a guide/consultation also unlocks the platform
         updated_at: new Date().toISOString(),
       };
 
-      if (product === "low_guides") unlockPayload.low_guides_unlocked = true;
-      else if (product === "high_guides") unlockPayload.high_guides_unlocked = true;
-      else if (product === "consultation_20min") unlockPayload.consult_20_paid = true;
-      else if (product === "consultation_30min") unlockPayload.consult_30_paid = true;
-      else if (product === "consultation_60min") unlockPayload.consult_60_paid = true;
+      if (product === "platform") {
+        unlockPayload.platform_unlocked = true;
+      } else if (product === "low_guides") {
+        unlockPayload.low_guides_unlocked = true;
+      } else if (product === "high_guides") {
+        unlockPayload.high_guides_unlocked = true;
+      } else if (product === "consultation_20min") {
+        unlockPayload.consult_20_paid = true;
+      } else if (product === "consultation_30min") {
+        unlockPayload.consult_30_paid = true;
+      } else if (product === "consultation_60min") {
+        unlockPayload.consult_60_paid = true;
+      }
 
       const { error: accessError } = await supabase
         .from("user_access")
