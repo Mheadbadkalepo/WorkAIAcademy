@@ -62,7 +62,7 @@ const PACKAGES: ConsultPackage[] = [
   {
     id: "60",
     title: "1 Hour Call",
-    amountUsd: 15,
+    amountUsd: 25,
     duration: "1 hour",
     description: "ATS-friendly CV writing & complete job application strategy",
     scheduleLabel: "Schedule 1 hour",

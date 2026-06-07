@@ -104,6 +104,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         else if (amountUSD === 5 || amountUSD === 20) product = "high_guides";
         else if (amountUSD === 10) product = "consultation_20min";
         else if (amountUSD === 13) product = "consultation_30min";
+        else if (amountUSD === 25) product = "consultation_60min";
         else if (amountUSD === 15) {
           // If after June 12, $15 is low_guides. Otherwise, it's consultation_60min.
           const now = new Date();
