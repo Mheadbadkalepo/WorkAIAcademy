@@ -40,7 +40,7 @@ const PACKAGES: ConsultPackage[] = [
   {
     id: "20",
     title: "20 Minute Call",
-    amountUsd: 5,
+    amountUsd: 10,
     duration: "20 min",
     description: "Quick consultation for fast guidance",
     scheduleLabel: "Schedule 20 minutes",
@@ -51,7 +51,7 @@ const PACKAGES: ConsultPackage[] = [
   {
     id: "30",
     title: "30 Minute Call",
-    amountUsd: 8,
+    amountUsd: 13,
     duration: "30 min",
     description: "Perfect for detailed help and support",
     scheduleLabel: "Schedule 30 minutes",
@@ -62,7 +62,7 @@ const PACKAGES: ConsultPackage[] = [
   {
     id: "60",
     title: "1 Hour Call",
-    amountUsd: 10,
+    amountUsd: 15,
     duration: "1 hour",
     description: "ATS-friendly CV writing & complete job application strategy",
     scheduleLabel: "Schedule 1 hour",

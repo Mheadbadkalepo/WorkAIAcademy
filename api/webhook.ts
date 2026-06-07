@@ -100,8 +100,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // Fallback logic if product is missing in metadata
       if (!metadata.product) {
-        if (amountUSD === 2 || amountUSD === 15) product = "low_guides";
+        if (amountUSD === 2) product = "low_guides";
         else if (amountUSD === 5 || amountUSD === 20) product = "high_guides";
+        else if (amountUSD === 10) product = "consultation_20min";
+        else if (amountUSD === 13) product = "consultation_30min";
+        else if (amountUSD === 15) {
+          // If after June 12, $15 is low_guides. Otherwise, it's consultation_60min.
+          const now = new Date();
+          const isAfterJune12 = now >= new Date("2026-06-12T00:00:00+03:00");
+          product = isAfterJune12 ? "low_guides" : "consultation_60min";
+        }
         else if (amountUSD >= 15 && amountUSD <= 25) product = "consultation_20min";
         else if (amountUSD > 25 && amountUSD <= 40) product = "consultation_30min";
         else if (amountUSD > 40) product = "consultation_60min";
