@@ -8,9 +8,11 @@ import { useUnlock } from "../contexts/UnlockContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
+import { getGuidePrices } from "../../lib/pricing";
 
 export default function Guides() {
   const { isUnlocked, lowGuidesUnlocked, highGuidesUnlocked } = useUnlock();
+  const { low: lowPrice, high: highPrice } = getGuidePrices();
   const { isAdmin } = useAuth();
   
   const [guides, setGuides] = useState<any[]>([]);
@@ -70,7 +72,7 @@ export default function Guides() {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-2xl font-bold mb-2">Low Paying Guides</h2>
-                <p className="text-muted-foreground">Perfect for beginners - $2</p>
+                <p className="text-muted-foreground">Perfect for beginners - ${lowPrice}</p>
               </div>
               {/* Unlock CTA for low paying guides */}
               {!isUnlocked ? (
@@ -78,8 +80,8 @@ export default function Guides() {
                   <Button className="bg-primary hover:bg-primary/90">Unlock Platform First - $1</Button>
                 </Link>
               ) : !lowGuidesUnlocked ? (
-                <Link to="/checkout?product=low_guides&amount=2">
-                  <Button className="bg-primary hover:bg-primary/90">Unlock Low Guides - $2</Button>
+                <Link to={`/checkout?product=low_guides&amount=${lowPrice}`}>
+                  <Button className="bg-primary hover:bg-primary/90">Unlock Low Guides - ${lowPrice}</Button>
                 </Link>
               ) : null}
             </div>
@@ -119,8 +121,8 @@ export default function Guides() {
                             <Button variant="outline" className="w-full text-xs">🔐 Unlock Platform First ($1)</Button>
                           </Link>
                         ) : (
-                          <Link to="/checkout?product=low_guides&amount=2" className="w-full block">
-                            <Button variant="outline" className="w-full text-xs">🔓 Unlock Low Guides ($2)</Button>
+                          <Link to={`/checkout?product=low_guides&amount=${lowPrice}`} className="w-full block">
+                            <Button variant="outline" className="w-full text-xs">🔓 Unlock Low Guides (${lowPrice})</Button>
                           </Link>
                         )}
                       </div>
@@ -142,7 +144,7 @@ export default function Guides() {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-2xl font-bold mb-2">High Paying Guides</h2>
-                <p className="text-muted-foreground">Advanced opportunities - $5</p>
+                <p className="text-muted-foreground">Advanced opportunities - ${highPrice}</p>
               </div>
               {/* Unlock CTA for high paying guides */}
               {!isUnlocked ? (
@@ -150,8 +152,8 @@ export default function Guides() {
                   <Button className="bg-secondary hover:bg-secondary/90">Unlock Platform First - $1</Button>
                 </Link>
               ) : !highGuidesUnlocked ? (
-                <Link to="/checkout?product=high_guides&amount=5">
-                  <Button className="bg-secondary hover:bg-secondary/90">Unlock High Guides - $5</Button>
+                <Link to={`/checkout?product=high_guides&amount=${highPrice}`}>
+                  <Button className="bg-secondary hover:bg-secondary/90">Unlock High Guides - ${highPrice}</Button>
                 </Link>
               ) : null}
             </div>
@@ -191,8 +193,8 @@ export default function Guides() {
                             <Button variant="outline" className="w-full text-xs">🔐 Unlock Platform First ($1)</Button>
                           </Link>
                         ) : (
-                          <Link to="/checkout?product=high_guides&amount=5" className="w-full block">
-                            <Button variant="outline" className="w-full text-xs">🔓 Unlock High Guides ($5)</Button>
+                          <Link to={`/checkout?product=high_guides&amount=${highPrice}`} className="w-full block">
+                            <Button variant="outline" className="w-full text-xs">🔓 Unlock High Guides (${highPrice})</Button>
                           </Link>
                         )}
                       </div>
@@ -220,14 +222,14 @@ export default function Guides() {
                   Our guides include application tips, interview preparation, task walkthroughs, and proven strategies to help you get hired faster and earn more.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Link to="/checkout?product=low_guides&amount=2">
+                  <Link to={`/checkout?product=low_guides&amount=${lowPrice}`}>
                     <Button size="lg" className="bg-primary hover:bg-primary/90">
-                      Get Low Paying Guides - $2
+                      Get Low Paying Guides - ${lowPrice}
                     </Button>
                   </Link>
-                  <Link to="/checkout?product=high_guides&amount=5">
+                  <Link to={`/checkout?product=high_guides&amount=${highPrice}`}>
                     <Button size="lg" className="bg-secondary hover:bg-secondary/90">
-                      Get High Paying Guides - $5
+                      Get High Paying Guides - ${highPrice}
                     </Button>
                   </Link>
                 </div>

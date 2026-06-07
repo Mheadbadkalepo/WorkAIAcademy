@@ -45,8 +45,10 @@ export default function ProfileSetup() {
       goals: selectedGoals,
       profile_completed: true,
     });
+
     if (error) {
-      setError("Failed to save profile. Please try again.");
+      console.error("Profile Save Error Details:", error);
+      setError(`Failed to save profile: ${error.message} (${error.details || 'Check console for details'})`);
       setLoading(false);
     } else {
       navigate("/profile");

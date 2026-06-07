@@ -12,6 +12,7 @@ import { Link } from "react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { Loader2 } from "lucide-react";
+import { getGuidePrices } from "../../lib/pricing";
 
 function parseHourlyPay(pay: string | null | undefined): number | null {
   if (!pay) return null;
@@ -45,6 +46,7 @@ function matchesCompany(company: string | null | undefined, filter: string): boo
 
 export default function AIJobs() {
   const { isUnlocked } = useUnlock();
+  const { low: lowPrice, high: highPrice } = getGuidePrices();
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchInput, setSearchInput] = useState("");
@@ -307,12 +309,12 @@ export default function AIJobs() {
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Link to="/guides">
                     <Button className="bg-primary hover:bg-primary/90 w-full sm:w-auto">
-                      Low Paying Guides - $2
+                      Low Paying Guides - ${lowPrice}
                     </Button>
                   </Link>
                   <Link to="/guides">
                     <Button className="bg-secondary hover:bg-secondary/90 w-full sm:w-auto">
-                      High Paying Guides - $5
+                      High Paying Guides - ${highPrice}
                     </Button>
                   </Link>
                 </div>

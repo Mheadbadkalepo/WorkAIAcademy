@@ -10,6 +10,8 @@ import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group";
 import { Smartphone, CreditCard, Loader2, CheckCircle2, ShieldCheck } from "lucide-react";
 import { useUnlock } from "../contexts/UnlockContext";
 import { useAuth } from "../contexts/AuthContext";
+import { Badge } from "../components/ui/badge";
+import { getGuidePrices } from "../../lib/pricing";
 
 declare global {
   interface Window {
@@ -23,6 +25,7 @@ export default function Payment() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { low: lowPrice, high: highPrice, isAfterIncrease } = getGuidePrices();
 
   const { setUnlocked, refreshUnlocks } = useUnlock();
   const { user, loading } = useAuth();
@@ -99,7 +102,12 @@ export default function Payment() {
             {/* Upsell Cards */}
             <h2 className="text-2xl font-bold mb-6">Upgrade Your Access</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <Card className="border-2 border-primary/20 hover:border-primary/50 transition-colors">
+              <Card className="border-2 border-primary/20 hover:border-primary/50 transition-colors relative">
+                {!isAfterIncrease && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <Badge className="bg-destructive text-destructive-foreground hover:bg-destructive/90 text-xs py-0.5 px-2">Price rising soon</Badge>
+                  </div>
+                )}
                 <CardContent className="pt-8 pb-6">
                   <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                     <span className="text-2xl">📘</span>
@@ -108,8 +116,15 @@ export default function Payment() {
                   <CardDescription className="mb-4">
                     Appen, Remotask & Clickworker
                   </CardDescription>
-                  <p className="text-3xl font-bold text-primary mb-4">$2</p>
-                  <Link to="/checkout?product=low_guides&amount=2" className="block">
+                  <div className="mb-4 flex flex-col items-center">
+                    <p className="text-3xl font-bold text-primary font-mono">${lowPrice}</p>
+                    {!isAfterIncrease && (
+                      <span className="text-xs text-destructive font-semibold mt-1">
+                        (Rises to $15 on June 12)
+                      </span>
+                    )}
+                  </div>
+                  <Link to={`/checkout?product=low_guides&amount=${lowPrice}`} className="block">
                     <Button className="w-full bg-primary hover:bg-primary/90">
                       Unlock Low Guides
                     </Button>
@@ -117,7 +132,12 @@ export default function Payment() {
                 </CardContent>
               </Card>
 
-              <Card className="border-2 border-secondary/20 hover:border-secondary/50 transition-colors">
+              <Card className="border-2 border-secondary/20 hover:border-secondary/50 transition-colors relative">
+                {!isAfterIncrease && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <Badge className="bg-destructive text-destructive-foreground hover:bg-destructive/90 text-xs py-0.5 px-2">Price rising soon</Badge>
+                  </div>
+                )}
                 <CardContent className="pt-8 pb-6">
                   <div className="w-14 h-14 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-4">
                     <span className="text-2xl">📕</span>
@@ -126,8 +146,15 @@ export default function Payment() {
                   <CardDescription className="mb-4">
                     Outlier, Telus & Scale AI
                   </CardDescription>
-                  <p className="text-3xl font-bold text-secondary mb-4">$5</p>
-                  <Link to="/checkout?product=high_guides&amount=5" className="block">
+                  <div className="mb-4 flex flex-col items-center">
+                    <p className="text-3xl font-bold text-secondary font-mono">${highPrice}</p>
+                    {!isAfterIncrease && (
+                      <span className="text-xs text-destructive font-semibold mt-1">
+                        (Rises to $20 on June 12)
+                      </span>
+                    )}
+                  </div>
+                  <Link to={`/checkout?product=high_guides&amount=${highPrice}`} className="block">
                     <Button className="w-full bg-secondary hover:bg-secondary/90">
                       Unlock High Guides
                     </Button>

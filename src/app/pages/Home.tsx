@@ -4,8 +4,9 @@ import Footer from "../components/Footer";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
-import { Sparkles, BriefcaseBusiness, GraduationCap, Shield, Zap, Target, CheckCircle2 } from "lucide-react";
+import { Sparkles, BriefcaseBusiness, GraduationCap, Shield, Zap, Target, CheckCircle2, AlertTriangle } from "lucide-react";
 import { motion } from "motion/react";
+import { getGuidePrices } from "../../lib/pricing";
 
 const testimonials = [
   {
@@ -59,6 +60,8 @@ const testimonials = [
 ];
 
 export default function Home() {
+  const { low: lowPrice, high: highPrice, isAfterIncrease } = getGuidePrices();
+
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -197,6 +200,46 @@ export default function Home() {
       {/* Pricing Preview */}
       <section className="py-20 px-4 bg-muted/30">
         <div className="max-w-7xl mx-auto">
+          {/* Price Increase Warning Banner with Heartbeat animation */}
+          {!isAfterIncrease && (
+            <motion.div 
+              className="mb-12 p-4 rounded-xl border border-amber-500/30 bg-amber-500/10 flex items-center gap-3 max-w-3xl mx-auto text-left shadow-md"
+              animate={{
+                scale: [1, 1.015, 1],
+                borderColor: [
+                  "rgba(245, 158, 11, 0.3)",
+                  "rgba(245, 158, 11, 0.7)",
+                  "rgba(245, 158, 11, 0.3)"
+                ],
+                boxShadow: [
+                  "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+                  "0 10px 20px -3px rgba(245, 158, 11, 0.15), 0 4px 6px -2px rgba(245, 158, 11, 0.05)",
+                  "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)"
+                ]
+              }}
+              transition={{
+                duration: 2.5,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
+              <motion.div
+                animate={{ scale: [1, 1.15, 1] }}
+                transition={{ duration: 1.25, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <AlertTriangle className="w-6 h-6 text-amber-500 shrink-0" />
+              </motion.div>
+              <div>
+                <p className="font-semibold text-amber-950 dark:text-amber-200">
+                  Upcoming Price Increase Scheduled for June 12, 2026
+                </p>
+                <p className="text-sm text-amber-900/80 dark:text-amber-200/80">
+                  Lifetime access to Low Paying Guides and High Paying Guides will increase to <strong className="text-foreground">$15</strong> and <strong className="text-foreground">$20</strong> respectively. Buy today to lock in the current rates!
+                </p>
+              </div>
+            </motion.div>
+          )}
+
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
               Simple, Transparent Pricing
@@ -242,14 +285,25 @@ export default function Home() {
             </Card>
 
             <Card className="border-2 border-primary relative">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex gap-1.5">
                 <Badge className="bg-primary">Recommended</Badge>
+                {!isAfterIncrease && (
+                  <Badge className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Price rising soon</Badge>
+                )}
               </div>
               <CardHeader>
                 <CardTitle>Low Paying Guides</CardTitle>
                 <CardDescription>Perfect for beginners</CardDescription>
-                <div className="mt-4">
-                  <span className="text-4xl font-bold">$2</span>
+                <div className="mt-4 flex flex-col">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl font-bold">${lowPrice}</span>
+                    <span className="text-muted-foreground text-sm font-normal">one-time</span>
+                  </div>
+                  {!isAfterIncrease && (
+                    <span className="text-xs text-destructive font-semibold mt-1">
+                      (Rises to $15 on June 12)
+                    </span>
+                  )}
                 </div>
               </CardHeader>
               <CardContent>
@@ -277,12 +331,25 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card className="border-2">
+            <Card className="border-2 relative">
+              {!isAfterIncrease && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <Badge className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Price rising soon</Badge>
+                </div>
+              )}
               <CardHeader>
                 <CardTitle>High Paying Guides</CardTitle>
                 <CardDescription>Advanced opportunities</CardDescription>
-                <div className="mt-4">
-                  <span className="text-4xl font-bold">$5</span>
+                <div className="mt-4 flex flex-col">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl font-bold">${highPrice}</span>
+                    <span className="text-muted-foreground text-sm font-normal">one-time</span>
+                  </div>
+                  {!isAfterIncrease && (
+                    <span className="text-xs text-destructive font-semibold mt-1">
+                      (Rises to $20 on June 12)
+                    </span>
+                  )}
                 </div>
               </CardHeader>
               <CardContent>

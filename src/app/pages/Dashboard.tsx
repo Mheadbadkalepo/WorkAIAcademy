@@ -9,10 +9,12 @@ import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../../lib/supabase";
 import { useEffect, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
+import { getGuidePrices } from "../../lib/pricing";
 
 export default function Dashboard() {
   const { theme, toggleTheme } = useTheme();
   const { isUnlocked } = useUnlock();
+  const { low: lowPrice, high: highPrice } = getGuidePrices();
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
 
@@ -326,7 +328,7 @@ export default function Dashboard() {
                   <div className="p-4 rounded-lg border-2 border-primary/20 bg-primary/5">
                     <div className="flex items-start justify-between mb-2">
                       <h4 className="font-semibold">Low Paying Guides</h4>
-                      <Badge className="bg-primary">{isUnlocked ? "Unlocked" : "$2"}</Badge>
+                      <Badge className="bg-primary">{isUnlocked ? "Unlocked" : `$${lowPrice}`}</Badge>
                     </div>
                     <p className="text-sm text-muted-foreground mb-3">
                       Perfect for beginners. Includes Appen, Remotasks, and Clickworker guides.
@@ -338,7 +340,7 @@ export default function Dashboard() {
                         </Button>
                       </Link>
                     ) : (
-                      <Link to="/checkout?product=low_guides&amount=2" className="block w-full">
+                      <Link to={`/checkout?product=low_guides&amount=${lowPrice}`} className="block w-full">
                         <Button className="w-full bg-primary hover:bg-primary/90" size="sm">
                           Unlock Now
                         </Button>
@@ -349,7 +351,7 @@ export default function Dashboard() {
                   <div className="p-4 rounded-lg border-2 border-secondary/20 bg-secondary/5">
                     <div className="flex items-start justify-between mb-2">
                       <h4 className="font-semibold">High Paying Guides</h4>
-                      <Badge className="bg-secondary">{isUnlocked ? "Unlocked" : "$5"}</Badge>
+                      <Badge className="bg-secondary">{isUnlocked ? "Unlocked" : `$${highPrice}`}</Badge>
                     </div>
                     <p className="text-sm text-muted-foreground mb-3">
                       Advanced opportunities. Outlier AI, Telus AI, and Scale AI guides.
@@ -361,7 +363,7 @@ export default function Dashboard() {
                         </Button>
                       </Link>
                     ) : (
-                      <Link to="/checkout?product=high_guides&amount=5" className="block w-full">
+                      <Link to={`/checkout?product=high_guides&amount=${highPrice}`} className="block w-full">
                         <Button className="w-full bg-secondary hover:bg-secondary/90" size="sm">
                           Unlock Now
                         </Button>
