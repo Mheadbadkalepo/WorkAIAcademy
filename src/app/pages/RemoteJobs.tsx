@@ -69,9 +69,9 @@ export default function RemoteJobs() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Link to="/checkout?product=platform&amount=1" className="block w-full">
+                    <Link to="/checkout?product=platform&amount=2.5" className="block w-full">
                       <Button className="w-full bg-secondary hover:bg-secondary/90" size="lg">
-                        Unlock for $1
+                        Unlock for $2.50
                       </Button>
                     </Link>
                   </CardContent>

@@ -49,7 +49,7 @@ Pages to generate:
 Three pricing cards:
 
 Starter Access
-$1 one-time
+$2.50 one-time
 Access to platform
 Dashboard access
 AI job listings

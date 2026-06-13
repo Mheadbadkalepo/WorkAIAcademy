@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 // Previous configuration
 const PRODUCT_PRICES: Record<string, number> = {
-  platform: 1.0,
+  platform: 2.5,
   low_guides: 2.0,
   high_guides: 5.0,
   consultation_20min: 20.0,

@@ -65,7 +65,7 @@ export default function Pricing() {
               Choose Your Path
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Start with $1 platform access, then unlock specific guides based on your goals
+              Start with $2.50 platform access, then unlock specific guides based on your goals
             </p>
           </div>
 
@@ -76,7 +76,7 @@ export default function Pricing() {
                 <CardTitle>Starter Access</CardTitle>
                 <CardDescription>Unlock the platform</CardDescription>
                 <div className="mt-4">
-                  <span className="text-5xl font-bold">$1</span>
+                  <span className="text-5xl font-bold">$2.50</span>
                   <span className="text-muted-foreground text-lg"> one-time</span>
                 </div>
               </CardHeader>
@@ -103,7 +103,7 @@ export default function Pricing() {
                     <span>Basic resources</span>
                   </div>
                 </div>
-                <Link to="/checkout?product=platform&amount=1" className="block w-full">
+                <Link to="/checkout?product=platform&amount=2.5" className="block w-full">
                   <Button className="w-full bg-primary hover:bg-primary/90">
                     Unlock Platform
                   </Button>
@@ -227,11 +227,11 @@ export default function Pricing() {
             <div className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Why do I need to pay $1?</CardTitle>
+                  <CardTitle className="text-lg">Why do I need to pay $2.50?</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">
-                    The $1 platform access fee helps us maintain the platform, verify job listings, and provide quality resources. It's a one-time payment that gives you lifetime access.
+                    The $2.50 platform access fee helps us maintain the platform, verify job listings, and provide quality resources. It's a one-time payment that gives you lifetime access.
                   </p>
                 </CardContent>
               </Card>
@@ -253,7 +253,7 @@ export default function Pricing() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">
-                    Yes! After unlocking the platform for $1, you can purchase Low Paying Guides (${lowPrice}) or High Paying Guides (${highPrice}) based on your needs.
+                    Yes! After unlocking the platform for $2.50, you can purchase Low Paying Guides (${lowPrice}) or High Paying Guides (${highPrice}) based on your needs.
                   </p>
                 </CardContent>
               </Card>

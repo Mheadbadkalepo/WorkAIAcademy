@@ -52,7 +52,7 @@ export default function Payment() {
       const handler = window.PaystackPop.setup({
         key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
         email: user.email,
-        amount: Math.round(1.00 * 140 * 100), // Convert USD to KES, then to cents
+        amount: Math.round(2.50 * 140 * 100), // Convert USD to KES, then to cents
         currency: 'KES',
         metadata: {
           user_id: user.id,
@@ -203,12 +203,12 @@ export default function Payment() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Platform Access</span>
-                      <span className="font-bold text-foreground">$1.00</span>
+                      <span className="font-bold text-foreground">$2.50</span>
                     </div>
                     <div className="border-t border-border pt-4">
                       <div className="flex items-center justify-between text-lg">
                         <span className="font-semibold">Total</span>
-                        <span className="font-bold text-2xl text-primary">$1.00</span>
+                        <span className="font-bold text-2xl text-primary">$2.50</span>
                       </div>
                     </div>
                     <div className="bg-primary/5 rounded-lg p-4 mt-4 flex gap-3 items-start">

@@ -89,7 +89,7 @@ export default function Register() {
           <Card>
             <CardHeader className="space-y-1">
               <Badge className="w-fit mx-auto mb-2 bg-accent/10 text-accent-foreground border-accent">
-                $1 One-time Access
+                $2.50 One-time Access
               </Badge>
               <CardTitle className="text-2xl text-center">Create Account</CardTitle>
               <CardDescription className="text-center">
@@ -161,7 +161,7 @@ export default function Register() {
 
                 <div className="bg-accent/10 border border-accent/20 rounded-lg p-4">
                   <p className="text-sm text-center text-muted-foreground">
-                    After confirming your email, you can unlock the platform for $1
+                    After confirming your email, you can unlock the platform for $2.50
                   </p>
                 </div>
 

@@ -12,7 +12,7 @@ async function simulateWebhook() {
     event: 'charge.success',
     data: {
       reference: `test_ref_${Date.now()}`,
-      amount: 14000, // $1.00 in KES cents (1.00 * 140 * 100)
+      amount: 35000, // $2.50 in KES cents (2.50 * 140 * 100)
       status: 'success',
       metadata: JSON.stringify({
         user_id: TEST_USER_ID,

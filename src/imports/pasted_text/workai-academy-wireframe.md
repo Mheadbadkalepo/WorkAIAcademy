@@ -1,4 +1,4 @@
-Good question, Tevin 👍. The **$1 first-time access** should be clearly visible in the **wireframe flow** so users understand they must unlock the platform before accessing jobs and guides. Below is a clean **wireframe structure showing exactly how first-time access should work** inside **WorkAI Academy**.
+Good question, Tevin 👍. The **$2.50 first-time access** should be clearly visible in the **wireframe flow** so users understand they must unlock the platform before accessing jobs and guides. Below is a clean **wireframe structure showing exactly how first-time access should work** inside **WorkAI Academy**.
 
 ---
 
@@ -19,7 +19,7 @@ Good question, Tevin 👍. The **$1 first-time access** should be clearly visibl
 **CTA Buttons:**
 
 * Get Started
-* Unlock Platform ($1)
+* Unlock Platform ($2.50)
 
 ---
 
@@ -27,7 +27,7 @@ Good question, Tevin 👍. The **$1 first-time access** should be clearly visibl
 
 Small section under hero:
 
-> 🔓 One-time $1 access required to unlock the WorkAI Academy platform
+> 🔓 One-time $2.50 access required to unlock the WorkAI Academy platform
 
 Button:
 
@@ -51,7 +51,7 @@ Overlay card in center.
 
 ### Message
 
-> Unlock WorkAI Academy for $1 to access AI jobs, remote work guides, and premium resources.
+> Unlock WorkAI Academy for $2.50 to access AI jobs, remote work guides, and premium resources.
 
 ### Benefits
 
@@ -63,7 +63,7 @@ Overlay card in center.
 
 ### Button
 
-**Unlock for $1**
+**Unlock for $2.50**
 
 ---
 
@@ -84,7 +84,7 @@ Button:
 
 Below:
 
-> After creating account you will unlock platform for $1
+> After creating account you will unlock platform for $2.50
 
 ---
 
@@ -102,7 +102,7 @@ Unlock WorkAI Academy
 
 Platform Access
 
-$1 one-time
+$2.50 one-time
 
 ---
 
@@ -116,7 +116,7 @@ $1 one-time
 
 ### Button
 
-**Pay $1 and Unlock**
+**Pay $2.50 and Unlock**
 
 ---
 
@@ -194,7 +194,7 @@ Footer
 Navbar
 Locked Content
 Blurred Jobs
-Unlock $1 Card
+Unlock $2.50 Card
 Footer
 ```
 
@@ -205,7 +205,7 @@ Footer
 ```
 Navbar
 Unlock Platform Card
-Price $1
+Price $2.50
 M-Pesa
 Paystack
 Card
@@ -260,7 +260,7 @@ After payment:
 
 # 🏆 Best UX Flow
 
-Homepage → Preview → Register → Pay $1 → Dashboard → Buy Guides
+Homepage → Preview → Register → Pay $2.50 → Dashboard → Buy Guides
 
 Simple and clean.
 
@@ -278,7 +278,7 @@ Title:
 
 Text:
 
-> Pay $1 once to unlock WorkAI Academy
+> Pay $2.50 once to unlock WorkAI Academy
 
 Button:
 
@@ -288,7 +288,7 @@ Unlock Now
 
 # 🚀 Suggested Position
 
-Place **$1 access section**:
+Place **$2.50 access section**:
 
 * Under Hero
 * In Pricing Page
@@ -300,4 +300,4 @@ This ensures visibility everywhere.
 
 ---
 
-If you want, I can **update your Figma Make prompt to include this $1 first-time access wireframe flow and locked content screens** or **draw a visual wireframe diagram (step-by-step layout)**.
+If you want, I can **update your Figma Make prompt to include this $2.50 first-time access wireframe flow and locked content screens** or **draw a visual wireframe diagram (step-by-step layout)**.

@@ -108,7 +108,7 @@ export default function AIJobs() {
                     </div>
                     <CardTitle className="text-2xl">Unlock WorkAI Academy</CardTitle>
                     <CardDescription>
-                      Access AI jobs, remote work guides, and premium resources for just $1
+                      Access AI jobs, remote work guides, and premium resources for just $2.50
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -134,9 +134,9 @@ export default function AIJobs() {
                         <span className="text-sm">Dashboard access</span>
                       </div>
                     </div>
-                    <Link to="/checkout?product=platform&amount=1" className="block w-full">
+                    <Link to="/checkout?product=platform&amount=2.5" className="block w-full">
                       <Button className="w-full bg-primary hover:bg-primary/90" size="lg">
-                        Unlock for $1
+                        Unlock for $2.50
                       </Button>
                     </Link>
                   </CardContent>

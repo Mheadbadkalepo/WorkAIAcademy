@@ -77,7 +77,7 @@ export default function Guides() {
               {/* Unlock CTA for low paying guides */}
               {!isUnlocked ? (
                 <Link to="/payment">
-                  <Button className="bg-primary hover:bg-primary/90">Unlock Platform First - $1</Button>
+                  <Button className="bg-primary hover:bg-primary/90">Unlock Platform First - $2.50</Button>
                 </Link>
               ) : !lowGuidesUnlocked ? (
                 <Link to={`/checkout?product=low_guides&amount=${lowPrice}`}>
@@ -118,7 +118,7 @@ export default function Guides() {
                       <div className="space-y-2">
                         {!isUnlocked ? (
                           <Link to="/payment" className="w-full block">
-                            <Button variant="outline" className="w-full text-xs">🔐 Unlock Platform First ($1)</Button>
+                            <Button variant="outline" className="w-full text-xs">🔐 Unlock Platform First ($2.50)</Button>
                           </Link>
                         ) : (
                           <Link to={`/checkout?product=low_guides&amount=${lowPrice}`} className="w-full block">
@@ -149,7 +149,7 @@ export default function Guides() {
               {/* Unlock CTA for high paying guides */}
               {!isUnlocked ? (
                 <Link to="/payment">
-                  <Button className="bg-secondary hover:bg-secondary/90">Unlock Platform First - $1</Button>
+                  <Button className="bg-secondary hover:bg-secondary/90">Unlock Platform First - $2.50</Button>
                 </Link>
               ) : !highGuidesUnlocked ? (
                 <Link to={`/checkout?product=high_guides&amount=${highPrice}`}>
@@ -190,7 +190,7 @@ export default function Guides() {
                       <div className="space-y-2">
                         {!isUnlocked ? (
                           <Link to="/payment" className="w-full block">
-                            <Button variant="outline" className="w-full text-xs">🔐 Unlock Platform First ($1)</Button>
+                            <Button variant="outline" className="w-full text-xs">🔐 Unlock Platform First ($2.50)</Button>
                           </Link>
                         ) : (
                           <Link to={`/checkout?product=high_guides&amount=${highPrice}`} className="w-full block">

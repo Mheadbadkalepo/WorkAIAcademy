@@ -30,7 +30,7 @@ const testimonials = [
     name: "David Ochieng",
     role: "Remote Task Specialist",
     initials: "DO",
-    text: "The one dollar investment was the best decision I made. I'm now earning a consistent income completing tasks remotely.",
+    text: "The $2.50 investment was the best decision I made. I'm now earning a consistent income completing tasks remotely.",
     color: "accent"
   },
   {
@@ -87,7 +87,7 @@ export default function Home() {
               </Link>
               <Link to="/register">
                 <Button size="lg" variant="outline" className="w-full sm:w-auto border-2">
-                  Unlock Platform ($1)
+                  Unlock Platform ($2.50)
                 </Button>
               </Link>
             </div>
@@ -99,7 +99,7 @@ export default function Home() {
       <section className="py-8 px-4 bg-accent/5 border-y border-accent/20">
         <div className="max-w-7xl mx-auto text-center">
           <p className="text-lg mb-3">
-            🔓 One-time $1 access required to unlock the WorkAI Academy platform
+            🔓 One-time $2.50 access required to unlock the WorkAI Academy platform
           </p>
           <Link to="/register">
             <Button className="bg-primary hover:bg-primary/90">
@@ -255,7 +255,7 @@ export default function Home() {
                 <CardTitle>Starter Access</CardTitle>
                 <CardDescription>Get access to the platform</CardDescription>
                 <div className="mt-4">
-                  <span className="text-4xl font-bold">$1</span>
+                  <span className="text-4xl font-bold">$2.50</span>
                   <span className="text-muted-foreground"> one-time</span>
                 </div>
               </CardHeader>
